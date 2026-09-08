@@ -648,7 +648,9 @@ def load_provider_catalog(path: Path | str | None = None) -> dict[str, ProviderM
                 supported_reasoning_efforts=(
                     frozenset(str(value) for value in mspec["supported_reasoning_efforts"])
                     if isinstance(mspec.get("supported_reasoning_efforts"), list)
-                    and all(isinstance(value, str) for value in mspec["supported_reasoning_efforts"])
+                    and all(
+                        isinstance(value, str) for value in mspec["supported_reasoning_efforts"]
+                    )
                     else None
                 ),
                 subscription_class=primary.subscription_class,
@@ -1138,7 +1140,9 @@ def _role_from(
     return Role(
         name=name,
         model=str(model) if model else None,
-        reasoning_effort=sanitize_reasoning_effort(model, effort, {str(model): provider_meta} if provider_meta else None),
+        reasoning_effort=sanitize_reasoning_effort(
+            model, effort, {str(model): provider_meta} if provider_meta else None
+        ),
         autonomy=str(autonomy),
         capability_mode=capability_mode,
         description=description,

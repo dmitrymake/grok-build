@@ -70,9 +70,7 @@ def is_quota_failure(value: str) -> bool:
 
 def is_invalid_reasoning_effort_failure(signal: FailureSignal) -> bool:
     """Identify a 400 that can be retried once with the model default effort."""
-    value = " ".join(
-        (signal.text, signal.reason, str(signal.status or ""), signal.provider)
-    )
+    value = " ".join((signal.text, signal.reason, str(signal.status or ""), signal.provider))
     return bool(_INVALID_REASONING_EFFORT_RE.search(value)) and (
         signal.status in (None, 400) or str(signal.status or "").strip() == "400"
     )

@@ -419,9 +419,7 @@ def _fresh_spawn_binding(
     )
     requested_role = registry.get(requested)
     pinned_effort = requested_role.reasoning_effort if requested_role else None
-    effort = roles.sanitize_reasoning_effort(
-        target_model, pinned_effort, registry.provider_catalog
-    )
+    effort = roles.sanitize_reasoning_effort(target_model, pinned_effort, registry.provider_catalog)
     if not isinstance(raw_binding, Mapping):
         return ({"reasoning_effort": effort} if effort != pinned_effort else None), telemetry
     updated_binding = dict(raw_binding)
