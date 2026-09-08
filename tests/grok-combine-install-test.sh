@@ -35,7 +35,9 @@ fake="$(mktemp -d)"
 fake2="$(mktemp -d)"
 fake3="$(mktemp -d)"
 fake_partial="$(mktemp -d)"
-trap 'rm -rf "$fake" "$fake2" "$fake3" "$fake_partial" "$XDG_SANDBOX"' EXIT
+fake_semantic="$(mktemp -d)"
+fake_duplicate="$(mktemp -d)"
+trap 'rm -rf "$fake" "$fake2" "$fake3" "$fake_partial" "$fake_semantic" "$fake_duplicate" "$XDG_SANDBOX"' EXIT
 unset XDG_RUNTIME_DIR || true
 
 # First install: links point to the checkout and the live config validates.
@@ -255,5 +257,126 @@ REPO_DIR="$broken" bash scripts/install.sh >"$fake3/install-internal.log" 2>&1 |
   cat "$fake3/install-internal.log" >&2; fail "internal-hook upgrade aborted";
 }
 [ -L "$HOME/.grok/hooks/route.py" ] || fail "internal route.py link was removed"
+
+# TOML-equivalent quoted and bare model headers are treated as the same table.
+export HOME="$fake_semantic/home"
+mkdir -p "$HOME/.grok"
+cat > "$HOME/.grok/config.toml" <<'EOF'
+[models]
+default = "live-default"
+
+[model.gpt-6-astra]
+model = "live-astra"
+base_url = "http://live-pin"
+
+[model.gpt-oss-120b]
+model = "live-oss"
+
+[routing."conductor"]
+default = "live-conductor"
+
+[routing."verifiers"]
+"$REPO_ROOT" = ["./tests/grok-route-test.sh", "./tests/grok-combine-install-test.sh"]
+
+[routing."second_opinion"]
+model = "live-opinion"
+
+[corpus."taxonomy"]
+version = "live-taxonomy"
+EOF
+REPO_DIR="$PWD" bash scripts/install.sh >"$fake_semantic/install.log" 2>&1 || {
+  cat "$fake_semantic/install.log" >&2; fail "semantic-header install failed";
+}
+python3 - "$HOME/.grok/config.toml" <<'PY' || fail "semantic table merge was not preserved"
+import sys, tomllib
+from pathlib import Path
+path = Path(sys.argv[1])
+data = tomllib.loads(path.read_text(encoding="utf-8"))
+assert data["models"]["default"] == "live-default"
+assert data["model"]["gpt-6-astra"] == {"model": "live-astra", "base_url": "http://live-pin"}
+assert data["model"]["gpt-oss-120b"] == {"model": "live-oss"}
+assert data["routing"]["conductor"]["default"] == "live-conductor"
+assert data["routing"]["verifiers"]["$REPO_ROOT"] == ["./tests/grok-route-test.sh", "./tests/grok-combine-install-test.sh"]
+assert data["routing"]["second_opinion"]["model"] == "live-opinion"
+assert data["corpus"]["taxonomy"]["version"] == "live-taxonomy"
+raw = path.read_text()
+for header in ("[routing.\"conductor\"]", "[routing.\"verifiers\"]", "[routing.\"second_opinion\"]", "[corpus.\"taxonomy\"]"):
+    assert raw.count(header) == 1, header
+for name in ("gpt-6-astra", "gpt-oss-120b"):
+    assert sum(name in line for line in path.read_text().splitlines() if line.lstrip().startswith("[model")) == 1
+PY
+cp "$HOME/.grok/config.toml" "$fake_semantic/config.first"
+REPO_DIR="$PWD" bash scripts/install.sh >"$fake_semantic/install2.log" 2>&1 || fail "semantic second install failed"
+cmp -s "$HOME/.grok/config.toml" "$fake_semantic/config.first" || fail "semantic second install changed config"
+
+# Equivalent duplicate live declarations are diagnosed and safely reduced to one.
+export HOME="$fake_duplicate/equivalent-home"
+mkdir -p "$HOME/.grok"
+cat > "$HOME/.grok/config.toml" <<'EOF'
+[model.gpt-6-astra]
+model = "same-pin"
+
+[model."gpt-6-astra"]
+model = "same-pin"
+EOF
+REPO_DIR="$PWD" bash scripts/install.sh >"$fake_duplicate/equivalent.log" 2>&1 || fail "equivalent duplicate install failed"
+grep -q 'duplicate equivalent live table' "$fake_duplicate/equivalent.log" || fail "equivalent duplicate was not diagnosed"
+python3 - "$HOME/.grok/config.toml" <<'PY' || fail "equivalent duplicate was not deduplicated"
+import sys, tomllib
+from pathlib import Path
+path = Path(sys.argv[1])
+assert tomllib.loads(path.read_text())["model"]["gpt-6-astra"]["model"] == "same-pin"
+assert sum("gpt-6-astra" in line for line in path.read_text().splitlines() if line.lstrip().startswith("[model")) == 1
+PY
+
+# Array-of-tables are independent blocks and survive duplicate-table repair byte-for-byte.
+export HOME="$fake_duplicate/array-home"
+mkdir -p "$HOME/.grok"
+cat > "$HOME/.grok/config.toml" <<'EOF'
+[model.gpt-6-astra]
+model = "same-pin"
+
+[model."gpt-6-astra"]
+model = "same-pin"
+
+[[events]]
+name = "first"
+payload = "keep exactly"
+
+[[events]]
+name = "second"
+payload = "also keep"
+EOF
+REPO_DIR="$PWD" bash scripts/install.sh >"$fake_duplicate/array.log" 2>&1 || fail "array duplicate repair failed"
+python3 - "$HOME/.grok/config.toml" <<'PY' || fail "array-of-tables data was lost or moved"
+import sys, tomllib
+from pathlib import Path
+raw = Path(sys.argv[1]).read_text(encoding="utf-8")
+data = tomllib.loads(raw)
+assert data["events"] == [
+    {"name": "first", "payload": "keep exactly"},
+    {"name": "second", "payload": "also keep"},
+]
+assert raw.index('[[events]]\nname = "first"') < raw.index('[[events]]\nname = "second"')
+assert raw.index('payload = "keep exactly"') < raw.index('payload = "also keep"')
+PY
+
+# Conflicting duplicate live declarations fail without modifying the file.
+export HOME="$fake_duplicate/conflict-home"
+mkdir -p "$HOME/.grok"
+cat > "$HOME/.grok/config.toml" <<'EOF'
+[model.gpt-6-astra]
+model = "first-pin"
+
+[model."gpt-6-astra"]
+model = "second-pin"
+EOF
+cp "$HOME/.grok/config.toml" "$fake_duplicate/conflict.before"
+if REPO_DIR="$PWD" bash scripts/install.sh >"$fake_duplicate/conflict.log" 2>&1; then
+  fail "conflicting duplicate install unexpectedly succeeded"
+fi
+grep -q 'duplicate table \[model.gpt-6-astra\] has conflicting keys: model' "$fake_duplicate/conflict.log" \
+  || { cat "$fake_duplicate/conflict.log" >&2; fail "conflicting duplicate was not diagnosed precisely"; }
+cmp -s "$HOME/.grok/config.toml" "$fake_duplicate/conflict.before" || fail "conflicting duplicate was written"
 
 printf 'OK: grok-build install contract\n'

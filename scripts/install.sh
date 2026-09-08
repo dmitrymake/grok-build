@@ -141,7 +141,11 @@ from pathlib import Path
 
 repo, live = map(Path, sys.argv[1:3])
 fresh = sys.argv[3] == "1"
-header = re.compile(r"^\s*\[([^\[\]]+)\]\s*$")
+header = re.compile(r"^\s*\[([^\[\]]+)\](?:\s*#.*)?$\n?$")
+array_header = re.compile(r"^\s*\[\[([^\[\]]+)\]\](?:\s*#.*)?$\n?$")
+
+def any_header(line):
+    return header.match(line) or array_header.match(line)
 
 # Repository verifier entries and selected routing/corpus tables are merged into
 # live config without overwriting account-owned values.
@@ -149,50 +153,131 @@ old = live.read_text(encoding="utf-8")
 repo_text = repo.read_text(encoding="utf-8")
 repo_data = tomllib.loads(repo_text)
 
+# TOML permits quoted and bare dotted keys to spell the same table path. Use
+# the TOML parser to canonicalize headers instead of comparing their spelling.
+def table_path(section: str) -> tuple[str, ...]:
+    parsed = tomllib.loads(f"[{section}]\n__merge_marker = true\n")
+    def find(node, path=()):
+        if isinstance(node, dict):
+            if node.get("__merge_marker") is True:
+                return path
+            for key, value in node.items():
+                found = find(value, path + (key,))
+                if found is not None:
+                    return found
+        return None
+    result = find(parsed)
+    if result is None:
+        raise SystemExit(f"refusing to merge malformed table header [{section}]")
+    return result
+
+def blocks(text: str):
+    lines = text.splitlines(keepends=True)
+    preamble = []
+    result = []
+    index = 0
+    while index < len(lines):
+        match = header.match(lines[index]) or array_header.match(lines[index])
+        if not match:
+            if result:
+                result[-1][1].append(lines[index])
+            else:
+                preamble.append(lines[index])
+            index += 1
+            continue
+        current = [lines[index]]
+        section = match.group(1).strip()
+        if array_header.match(lines[index]):
+            section = "[[" + section + "]]"
+        result.append([section, current])
+        index += 1
+        while index < len(lines) and not any_header(lines[index]):
+            current.append(lines[index])
+            index += 1
+    return preamble, result
+
+def block_data(section: str, lines: list[str]):
+    parsed = tomllib.loads("".join(lines))
+    node = parsed
+    for key in table_path(section):
+        node = node[key]
+    return node
+
+def dedupe_live(text: str) -> str:
+    preamble, live_blocks = blocks(text)
+    seen = {}
+    kept = []
+    for section, lines in live_blocks:
+        if section.startswith("[["):
+            kept.append((section, lines))
+            continue
+        path = table_path(section)
+        if path not in seen:
+            seen[path] = (section, lines, block_data(section, lines))
+            kept.append((section, lines))
+            continue
+        first_section, first_lines, first_data = seen[path]
+        current_data = block_data(section, lines)
+        if current_data != first_data:
+            differing = sorted(set(first_data) ^ set(current_data) | {
+                key for key in set(first_data) & set(current_data)
+                if first_data[key] != current_data[key]
+            })
+            joined = ", ".join(differing) or "<values>"
+            raise SystemExit(
+                "refusing to merge live config: duplicate table "
+                f"[{'.'.join(path)}] has conflicting keys: {joined}"
+            )
+        print(
+            "warning: duplicate equivalent live table "
+            f"[{'.'.join(path)}] at [{first_section}] and [{section}]; "
+            "keeping the first declaration",
+            file=sys.stderr,
+        )
+    result = "".join(preamble)
+    for _, lines in kept:
+        result += "".join(lines)
+    return result
+
 # Account-owned managed values are authoritative. Fill only absent tables and
 # keys from the repository declaration; never replace an existing live pin.
 def fill_missing_tables(live_text: str, repo_text: str) -> str:
-    live_lines = live_text.splitlines(keepends=True)
-    repo_lines = repo_text.splitlines(keepends=True)
-    headers = {m.group(1).strip() for line in live_lines if (m := header.match(line))}
+    live_text = dedupe_live(live_text)
+    try:
+        tomllib.loads(live_text)
+    except tomllib.TOMLDecodeError as exc:
+        raise SystemExit(f"refusing to merge invalid live config: {exc}") from exc
+    _, live_blocks = blocks(live_text)
+    present = {table_path(section) for section, _ in live_blocks if not section.startswith("[[")}
+    present_arrays = {tuple(block) for section, block in live_blocks if section.startswith("[[")}
+    _, repo_blocks = blocks(repo_text)
     additions = []
-    index = 0
-    while index < len(repo_lines):
-        match = header.match(repo_lines[index])
-        if not match:
-            index += 1
-            continue
-        section = match.group(1).strip()
-        start = index
-        index += 1
-        while index < len(repo_lines) and not header.match(repo_lines[index]):
-            index += 1
-        block = repo_lines[start:index]
+    for section, block in repo_blocks:
         if section == "ui":
             continue
-        if section not in headers:
+        if section.startswith("[["):
+            if tuple(block) not in present_arrays:
+                additions.extend(block)
+        elif table_path(section) not in present:
             additions.extend(block)
-            continue
-        # Existing tables are left byte-for-byte intact: their live values,
-        # including multiline values, are authoritative.
-    result = "".join(live_lines).rstrip("\n")
+    result = live_text.rstrip("\n")
     if additions:
         result += "\n\n" + "".join(additions).rstrip("\n")
     return result + "\n"
 
 new = fill_missing_tables(old, repo_text)
 
-def relocate_tables(text: str, sections: tuple[str, ...]) -> str:
+def relocate_tables(text: str, sections: tuple[tuple[str, ...], ...]) -> str:
     lines = text.splitlines(keepends=True)
     kept = []
     blocks = []
     index = 0
     while index < len(lines):
         match = header.match(lines[index])
-        if match and match.group(1).strip() in sections:
+        if match and table_path(match.group(1).strip()) in sections:
             start = index
             index += 1
-            while index < len(lines) and not header.match(lines[index]):
+            while index < len(lines) and not any_header(lines[index]):
                 index += 1
             blocks.append(lines[start:index])
         else:
@@ -203,7 +288,7 @@ def relocate_tables(text: str, sections: tuple[str, ...]) -> str:
         result += "\n\n" + "".join(block).rstrip("\n")
     return result + "\n"
 
-new = relocate_tables(new, ("routing.conductor", "routing.second_opinion", "corpus.taxonomy"))
+new = relocate_tables(new, (("routing", "conductor"), ("routing", "second_opinion"), ("corpus", "taxonomy")))
 verifier_key = "$REPO_ROOT"
 verifier_commands = ["./tests/grok-route-test.sh", "./tests/grok-combine-install-test.sh"]
 verifier_line = f'"{verifier_key}" = ["{verifier_commands[0]}", "{verifier_commands[1]}"]\n'
@@ -228,7 +313,7 @@ elif verifier_key not in verifiers:
     lines = new.splitlines(keepends=True)
     for index, line in enumerate(lines):
         match = header.match(line)
-        if match and match.group(1).strip() == "routing.verifiers":
+        if match and table_path(match.group(1).strip()) == ("routing", "verifiers"):
             lines.insert(index + 1, verifier_line)
             new = "".join(lines)
             break
@@ -239,7 +324,7 @@ def ensure_table(text: str, section: str, repo_table: dict) -> str:
     lines = text.splitlines(keepends=True)
     section_index = next(
         (index for index, line in enumerate(lines)
-         if (match := header.match(line)) and match.group(1).strip() == section),
+         if (match := header.match(line)) and table_path(match.group(1).strip()) == table_path(section)),
         None,
     )
     rendered = [f"{key} = {json.dumps(value, ensure_ascii=False)}\n" for key, value in repo_table.items()]
@@ -249,7 +334,7 @@ def ensure_table(text: str, section: str, repo_table: dict) -> str:
     present = set()
     for line in lines[section_index + 1:]:
         match = header.match(line)
-        if match:
+        if any_header(line):
             break
         assignment = re.match(r"^\s*([A-Za-z0-9_-]+)\s*=", line)
         if assignment:
