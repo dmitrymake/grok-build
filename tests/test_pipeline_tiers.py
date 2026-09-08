@@ -332,7 +332,12 @@ def test_degraded_fallback() -> None:
 def test_overflow_after_primary_tiers() -> None:
     registry = load_registry(REPO_CONFIG)
     state = RuntimeState()
-    for role_name in ("implement-cheap", "implement-standard", "implement-strong", "implement-hard"):
+    for role_name in (
+        "implement-cheap",
+        "implement-standard",
+        "implement-strong",
+        "implement-hard",
+    ):
         state.set_available(role_name, False, "Codex down")
     feats = extract_features("напиши тест для demo-api", load_intents())
     role, reasons, degraded = select_implement_role(
@@ -351,7 +356,13 @@ def test_overflow_after_primary_tiers() -> None:
 def test_flash_fallback_only_low_risk() -> None:
     registry = load_registry(REPO_CONFIG)
     state = RuntimeState()
-    for r in ("implement-cheap", "implement-standard", "implement-strong", "implement-hard", "implement-overflow"):
+    for r in (
+        "implement-cheap",
+        "implement-standard",
+        "implement-strong",
+        "implement-hard",
+        "implement-overflow",
+    ):
         state.set_available(r, False, "down")
 
     feats = extract_features("напиши тест для demo-api", load_intents())
@@ -547,7 +558,9 @@ def test_conductor_flash_catalog_has_only_the_criterion_role_pin() -> None:
     reg = load_registry(REPO_CONFIG)
     flash = reg.provider_catalog.get("glm-5.3-flash")
     check("glm-5.3-flash" in reg.known_models, "configured security-Flash is a configured model")
-    check(flash is not None and flash.provider == "zai", "configured security-Flash provider is Z.AI")
+    check(
+        flash is not None and flash.provider == "zai", "configured security-Flash provider is Z.AI"
+    )
     check(
         flash is not None and flash.capabilities.vision is True,
         "configured security-Flash has explicit vision capability",
@@ -797,7 +810,10 @@ def test_degraded_review_marker_reaches_route_telemetry() -> None:
     )
     outcome = pipeline.decision_outcome(decision)
     markers = [warning for warning in outcome["warnings"] if "independent review" in warning]
-    check(markers, f"independent-review availability warning is persisted in telemetry ({outcome['warnings']})")
+    check(
+        markers,
+        f"independent-review availability warning is persisted in telemetry ({outcome['warnings']})",
+    )
     check(
         not any("degraded-review" in warning for warning in outcome["warnings"]),
         "independent review fallback is not mislabeled as same-family degradation",
@@ -884,7 +900,12 @@ def test_hard_tier_medium_risk_gets_review() -> None:
 
 def test_overflow_medium_complexity_gets_review() -> None:
     state = RuntimeState()
-    for role_name in ("implement-cheap", "implement-standard", "implement-strong", "implement-hard"):
+    for role_name in (
+        "implement-cheap",
+        "implement-standard",
+        "implement-strong",
+        "implement-hard",
+    ):
         state.set_available(role_name, False, "down")
     decision = route_prompt(
         "route=implement: рефактор " + " ".join(["кода"] * 40),

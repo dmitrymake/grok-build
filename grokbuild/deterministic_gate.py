@@ -93,7 +93,11 @@ def legacy_checks(
         GateCheck(
             kind,
             name,
-            "PASS" if results.get(name) is True else "FAIL" if results.get(name) is False else "UNKNOWN",
+            "PASS"
+            if results.get(name) is True
+            else "FAIL"
+            if results.get(name) is False
+            else "UNKNOWN",
         )
         for name in required
     )

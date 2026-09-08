@@ -24,6 +24,7 @@ from grokbuild.state import (
     DEFAULT_FAILURE_THRESHOLD,
     ExecutionTrack,
     RuntimeState,
+    state_from_raw,
     _migrate_legacy_history,
     _with_stage_slots,
     default_log_path,
@@ -35,11 +36,7 @@ def _transaction(path, mutate, *, append_decision=None):
     target = Path(path) if path is not None else default_state_path()
 
     def updater(raw):
-        state = (
-            RuntimeState.from_dict(raw)
-            if isinstance(raw, Mapping)
-            else RuntimeState(source_path=target)
-        )
+        state = state_from_raw(raw, target)
         state.prune()
         mutate(state)
         return state.to_dict()
@@ -1094,7 +1091,11 @@ def record_retrieval_result_tx(
         current_owner = track.member_tasks.get(stage_key) or track.stage_tasks.get(actual_role)
         if current_owner is None:
             current_owner = next(
-                (bound_id for bound_id, bound_key in track.terminal_tasks.items() if bound_key == stage_key),
+                (
+                    bound_id
+                    for bound_id, bound_key in track.terminal_tasks.items()
+                    if bound_key == stage_key
+                ),
                 None,
             )
         if current_owner is not None and current_owner != task_id:
@@ -1183,7 +1184,11 @@ def record_review_inconclusive_tx(
         current_owner = track.member_tasks.get(stage_key) or track.stage_tasks.get(actual_role)
         if current_owner is None:
             current_owner = next(
-                (bound_id for bound_id, bound_key in track.terminal_tasks.items() if bound_key == stage_key),
+                (
+                    bound_id
+                    for bound_id, bound_key in track.terminal_tasks.items()
+                    if bound_key == stage_key
+                ),
                 None,
             )
         if current_owner is not None and current_owner != task_id:
@@ -1297,7 +1302,9 @@ def record_verify_retrieval_tx(
                 if step not in track.failed:
                     track.failed.append(step)
                 track.failure_reasons[step] = (
-                    failure_signal.reason if failure_signal is not None else "verifier result failure"
+                    failure_signal.reason
+                    if failure_signal is not None
+                    else "verifier result failure"
                 )
             track.updated_at = time.time()
         outcome = "recorded"

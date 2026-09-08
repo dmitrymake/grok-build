@@ -1,5 +1,10 @@
 # Benchmark v1: Opus 5 solo vs grok-build
 
+This document contains benchmark material, including synthetic tasks. The
+Russian protocol text below is retained for internal consistency with the
+original benchmark procedure.
+
+
 Первый matched-budget замер. Три закрытые задачи (coding / ops / security), у
 каждой скрытый acceptance-verifier у контролёра — агент его не видит. Цель:
 verified success, false-success и стоимость при сопоставимом бюджете.

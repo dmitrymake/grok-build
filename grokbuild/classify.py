@@ -83,7 +83,11 @@ def _hits(text: str, needles: list[str]) -> list[str]:
                 found.append(raw)
             continue
         # Prefix-of-token matching lets Russian stems match inflected forms.
-        if re.search(rf"(?<![0-9a-zа-я_]){re.escape(needle)}" + (r"(?![0-9a-zа-я_])" if needle.isascii() else ""), text):
+        if re.search(
+            rf"(?<![0-9a-zа-я_]){re.escape(needle)}"
+            + (r"(?![0-9a-zа-я_])" if needle.isascii() else ""),
+            text,
+        ):
             found.append(raw)
     return found
 

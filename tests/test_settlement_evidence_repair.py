@@ -13,7 +13,9 @@ from grokbuild.transactions import bind_terminal_task_tx, ensure_execution_tx, r
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _seed_prior_debt(tmp_path: Path, monkeypatch, task_id: str, *, current_profile: str = "default"):
+def _seed_prior_debt(
+    tmp_path: Path, monkeypatch, task_id: str, *, current_profile: str = "default"
+):
     setup_environment(tmp_path)
     path = default_state_path()
     prior = "prior-strict-debt"
@@ -61,7 +63,9 @@ def _spawn_result(task_id: str, output: str) -> dict:
     }
 
 
-def test_prior_strict_debt_remains_strict_after_current_route_flips_to_legacy(tmp_path, monkeypatch):
+def test_prior_strict_debt_remains_strict_after_current_route_flips_to_legacy(
+    tmp_path, monkeypatch
+):
     task_id = "prior-task-without-evidence"
     path, prior = _seed_prior_debt(tmp_path, monkeypatch, task_id)
     hook.handle_post_tool(_spawn_result(task_id, "Completed successfully."), {})
@@ -70,7 +74,9 @@ def test_prior_strict_debt_remains_strict_after_current_route_flips_to_legacy(tm
     assert "implement-hard" not in track.completed
 
 
-def test_prior_strict_debt_accepts_typed_evidence_after_current_route_flips_to_legacy(tmp_path, monkeypatch):
+def test_prior_strict_debt_accepts_typed_evidence_after_current_route_flips_to_legacy(
+    tmp_path, monkeypatch
+):
     task_id = "prior-task-with-evidence"
     path, prior = _seed_prior_debt(tmp_path, monkeypatch, task_id)
     typed = {

@@ -286,7 +286,13 @@ def verification_gate_check(
     evidence_ref: str = "",
 ) -> GateCheck:
     """Project a verifier outcome without exposing verifier source or raw output."""
-    status = "PASS" if verification.verified else "UNKNOWN" if "not_evaluated" in verification.reason_codes else "FAIL"
+    status = (
+        "PASS"
+        if verification.verified
+        else "UNKNOWN"
+        if "not_evaluated" in verification.reason_codes
+        else "FAIL"
+    )
     return GateCheck(kind, name, status, evidence_ref)  # type: ignore[arg-type]
 
 

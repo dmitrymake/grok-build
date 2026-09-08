@@ -1,3 +1,4 @@
+# BENCHMARK FIXTURE — deliberately insecure; never use in production.
 """Serve files from a fixed root directory to untrusted callers."""
 
 import os

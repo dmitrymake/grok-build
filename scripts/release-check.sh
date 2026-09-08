@@ -66,6 +66,10 @@ files = tracked()
 ok = True
 terms1 = entries("blacklist-l1.txt")
 terms2 = entries("blacklist-l2.txt")
+if allow_empty_blacklist:
+    # Hermetic public clones intentionally omit private blacklist terms and history checks.
+    terms1 = []
+    terms2 = []
 def boundary_pattern(terms):
     if not terms:
         return None

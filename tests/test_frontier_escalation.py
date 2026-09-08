@@ -430,7 +430,9 @@ def test_pairwise_abstention_requests_evidence_before_frontier_adjudication() ->
     from grokbuild.compose import compose_adjudication_stage, compose_evidence_stage
     from grokbuild.verifier_planner import analyze
 
-    request = analyze(Verdict("needs_discriminating_test", reason_codes=("low_margin",)), ("A", "B"))
+    request = analyze(
+        Verdict("needs_discriminating_test", reason_codes=("low_margin",)), ("A", "B")
+    )
     check(request is not None, "an aggregate abstention requests discriminating evidence")
     evidence = compose_evidence_stage(request)
     adjudication = compose_adjudication_stage("judge-frontier-code")

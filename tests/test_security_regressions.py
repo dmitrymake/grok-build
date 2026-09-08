@@ -261,7 +261,7 @@ def test_shell_parser() -> None:
         "sort -o/tmp/x input.txt",
         "sort -ro /tmp/x f",
         "sort -uo/tmp/x f",
-        "sort -o\"X\" f",
+        'sort -o"X" f',
         "uniq input.txt /tmp/x",
         "uniq -c input.txt /tmp/x",
         "uniq -w10 in out",
@@ -1910,10 +1910,17 @@ def test_exactly_one_outcome_records(tmp: Path) -> None:
     )
 
     child_sid = "01a0063b-a2dd-7bf2-aafd-4a66cf837702"
-    _plant_session(tmp / "grok", prompt, session_kind="subagent", session_id=child_sid, metadata_in_info=True)
+    _plant_session(
+        tmp / "grok", prompt, session_kind="subagent", session_id=child_sid, metadata_in_info=True
+    )
     before_child = len(records())
     rc, _ = run_main(
-        {"hookEventName": "PreToolUse", "sessionId": child_sid, "toolName": "write", "toolInput": {}}
+        {
+            "hookEventName": "PreToolUse",
+            "sessionId": child_sid,
+            "toolName": "write",
+            "toolInput": {},
+        }
     )
     child_records = records()
     check(

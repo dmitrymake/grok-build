@@ -415,7 +415,9 @@ def render_security(
             emitted.update({name, pair[0][0]})
         else:
             emitted.add(name)
-        lines.append(f"| {label} | `{pin}` | `{config['subagents']['roles'][name].get('autonomy', 'standard')}` | {contract} |")
+        lines.append(
+            f"| {label} | `{pin}` | `{config['subagents']['roles'][name].get('autonomy', 'standard')}` | {contract} |"
+        )
     gp = config["subagents"]["models"]["general-purpose"]
     provider_pool = prose["binding_rules"]["provider_pool_a"]
     grok = prose["binding_rules"]["grok_session_auth"]

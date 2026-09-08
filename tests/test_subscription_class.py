@@ -121,9 +121,15 @@ def main() -> int:
             "new endpoint models declare balance and primary projection",
         ),
         (test_every_catalog_model_declares_a_family, "catalog models declare families"),
-        (test_model_families_preserve_declared_line_grouping, "model families preserve declared line grouping"),
+        (
+            test_model_families_preserve_declared_line_grouping,
+            "model families preserve declared line grouping",
+        ),
         (test_real_model_family_groups_are_complete, "real model families are complete"),
-        (test_rotated_endpoints_are_peer_pools_and_ordered_endpoints_descend, "rotated endpoints are peers"),
+        (
+            test_rotated_endpoints_are_peer_pools_and_ordered_endpoints_descend,
+            "rotated endpoints are peers",
+        ),
     ]
     failures = 0
     for check, label in checks:
@@ -135,7 +141,6 @@ def main() -> int:
         else:
             print(f"ok   {label}")
     return failures
-
 
 
 def test_rotated_endpoints_are_peer_pools_and_ordered_endpoints_descend() -> None:

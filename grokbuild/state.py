@@ -35,6 +35,7 @@ from grokbuild.persist import (
     _read_decision_history_unbounded,
     atomic_update_json,
     _write_marker,
+    quarantine_json,
     sidecar_path,
 )
 
@@ -48,6 +49,101 @@ PROVIDER_AVAILABILITY_TTL = 24 * 60 * 60.0
 DEFAULT_FAILURE_THRESHOLD = 3
 DEFAULT_COOLDOWN_SECONDS = 300.0
 DEFAULT_CONSILIUM_THRESHOLD = 3
+
+
+class StateValidationError(ValueError):
+    """A parsed state document has an invalid schema shape."""
+
+
+def _require(condition: bool, path: str, message: str = "invalid value") -> None:
+    if not condition:
+        raise StateValidationError(f"{path}: {message}")
+
+
+def _strict_role_status(data: Mapping[str, Any], path: str) -> None:
+    counters = (
+        "consecutive_failures",
+        "consecutive_successes",
+        "total_failures",
+        "total_successes",
+        "requested",
+        "completed",
+        "quota_used",
+    )
+    for name in counters:
+        if name in data:
+            value = data[name]
+            _require(
+                isinstance(value, int) and not isinstance(value, bool) and value >= 0,
+                f"{path}.{name}",
+                "expected non-negative integer",
+            )
+
+
+def _strict_track(data: Mapping[str, Any], path: str) -> None:
+    for name in (
+        "member_tasks",
+        "stage_tasks",
+        "terminal_tasks",
+        "verify_tasks",
+        "released_verify_tasks",
+        "requested_at",
+        "repair_failures",
+        "not_found_streaks",
+        "failure_reasons",
+    ):
+        if data.get(name) is not None:
+            _require(isinstance(data[name], Mapping), f"{path}.{name}", "expected object")
+    for name in (
+        "requested",
+        "completed",
+        "failed",
+        "verified",
+        "warnings",
+        "migrated_dropped",
+        "stages",
+    ):
+        if data.get(name) is not None:
+            _require(isinstance(data[name], list), f"{path}.{name}", "expected array")
+    for name in (
+        "member_tasks",
+        "stage_tasks",
+        "terminal_tasks",
+        "verify_tasks",
+        "released_verify_tasks",
+    ):
+        for key, value in (data.get(name) or {}).items():
+            _require(
+                isinstance(key, str) and isinstance(value, str),
+                f"{path}.{name}.{key}",
+                "expected string pair",
+            )
+    for index, stage in enumerate(data.get("stages") or []):
+        stage = _mapping(stage, f"{path}.stages[{index}]")
+        kind = stage.get("kind", "spawn")
+        _require(
+            isinstance(kind, str) and bool(kind.strip()),
+            f"{path}.stages[{index}].kind",
+            "expected non-empty string",
+        )
+    value = data.get("stop_blocks", 0)
+    _require(
+        isinstance(value, int) and not isinstance(value, bool) and value >= 0,
+        f"{path}.stop_blocks",
+        "expected non-negative integer",
+    )
+    if "updated_at" in data:
+        value = data["updated_at"]
+        _require(
+            isinstance(value, (int, float)) and not isinstance(value, bool),
+            f"{path}.updated_at",
+            "expected number",
+        )
+
+
+def _mapping(value: Any, path: str) -> Mapping[str, Any]:
+    _require(isinstance(value, Mapping), path, "expected object")
+    return value
 
 
 def default_state_path() -> Path:
@@ -323,7 +419,11 @@ class ExecutionTrack:
             "stage_tasks": dict(self.stage_tasks),
             "terminal_tasks": dict(self.terminal_tasks),
             "verify_tasks": dict(self.verify_tasks),
-            **({"released_verify_tasks": dict(self.released_verify_tasks)} if self.released_verify_tasks else {}),
+            **(
+                {"released_verify_tasks": dict(self.released_verify_tasks)}
+                if self.released_verify_tasks
+                else {}
+            ),
             "requested_at": dict(self.requested_at),
             "repair_failures": dict(self.repair_failures),
             "not_found_streaks": dict(self.not_found_streaks),
@@ -444,7 +544,9 @@ class ExecutionTrack:
             stage_tasks={str(k): str(v) for k, v in (data.get("stage_tasks") or {}).items()},
             terminal_tasks={str(k): str(v) for k, v in (data.get("terminal_tasks") or {}).items()},
             verify_tasks={str(k): str(v) for k, v in (data.get("verify_tasks") or {}).items()},
-            released_verify_tasks={str(k): str(v) for k, v in (data.get("released_verify_tasks") or {}).items()},
+            released_verify_tasks={
+                str(k): str(v) for k, v in (data.get("released_verify_tasks") or {}).items()
+            },
             requested_at=requested_at,
             repair_failures=repair_failures,
             not_found_streaks=not_found_streaks,
@@ -867,6 +969,56 @@ class RuntimeState:
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any], source_path: Path | None = None) -> "RuntimeState":
+        _require(isinstance(data, Mapping), "state", "expected object")
+        raw_version = data.get("version", STATE_VERSION)
+        strict = "version" in data and raw_version == STATE_VERSION
+        if strict:
+            _require(
+                isinstance(raw_version, int) and not isinstance(raw_version, bool),
+                "version",
+                "expected integer",
+            )
+            for name in (
+                "roles",
+                "provider_availability",
+                "turns",
+                "prompts",
+                "turn_seen",
+                "executions",
+                "session_circuits",
+            ):
+                if name in data:
+                    _require(isinstance(data[name], Mapping), name, "expected object")
+            for name, spec in (data.get("roles") or {}).items():
+                _require(isinstance(name, str), f"roles.{name}", "expected string key")
+                _strict_role_status(_mapping(spec, f"roles.{name}"), f"roles.{name}")
+            for name, spec in (data.get("session_circuits") or {}).items():
+                _require(isinstance(name, str), f"session_circuits.{name}", "expected string key")
+                circuit = _mapping(spec, f"session_circuits.{name}")
+                for role, status in circuit.items():
+                    _require(
+                        isinstance(role, str),
+                        f"session_circuits.{name}.{role}",
+                        "expected string key",
+                    )
+                    _strict_role_status(
+                        _mapping(status, f"session_circuits.{name}.{role}"),
+                        f"session_circuits.{name}.{role}",
+                    )
+            for decision_id, spec in (data.get("executions") or {}).items():
+                _require(
+                    isinstance(decision_id, str), f"executions.{decision_id}", "expected string key"
+                )
+                _strict_track(
+                    _mapping(spec, f"executions.{decision_id}"), f"executions.{decision_id}"
+                )
+            if "updated_at" in data:
+                value = data["updated_at"]
+                _require(
+                    isinstance(value, (int, float)) and not isinstance(value, bool),
+                    "updated_at",
+                    "expected number",
+                )
         roles = {
             str(name): RoleStatus.from_dict(spec)
             for name, spec in (data.get("roles") or {}).items()
@@ -1000,6 +1152,18 @@ def _migrate_legacy_history(data: Any, path: Path) -> Any:
     return result
 
 
+def state_from_raw(raw: Any, target: Path) -> RuntimeState:
+    try:
+        return (
+            RuntimeState.from_dict(raw, source_path=target)
+            if isinstance(raw, Mapping)
+            else RuntimeState(source_path=target)
+        )
+    except StateValidationError as exc:
+        quarantine_json(target, str(exc))
+        return RuntimeState(source_path=target, stale=True)
+
+
 def load_state(path: Path | str | None = None) -> RuntimeState:
     target = Path(path) if path is not None else default_state_path()
     if not target.is_file():
@@ -1009,9 +1173,13 @@ def load_state(path: Path | str | None = None) -> RuntimeState:
     try:
         mtime = target.stat().st_mtime
         data = json.loads(target.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except json.JSONDecodeError:
+        quarantine_json(target)
+        return RuntimeState(source_path=target, stale=True)
+    except OSError:
         return RuntimeState(source_path=target, stale=True)
     if not isinstance(data, Mapping):
+        quarantine_json(target)
         return RuntimeState(source_path=target, stale=True)
     if "history" in data:
         data = atomic_update_json(
@@ -1021,7 +1189,11 @@ def load_state(path: Path | str | None = None) -> RuntimeState:
             on_load=lambda raw: _migrate_legacy_history(raw, target),
         )
         mtime = target.stat().st_mtime
-    state = RuntimeState.from_dict(data, source_path=target)
+    try:
+        state = RuntimeState.from_dict(data, source_path=target)
+    except StateValidationError as exc:
+        quarantine_json(target, str(exc))
+        return RuntimeState(source_path=target, stale=True)
     state.history = LazyDecisionHistory(_decisions_path(target))
     state.stale = (time.time() - mtime) > STALE_AFTER
     state.prune()
@@ -1046,6 +1218,8 @@ def current_turn_tx(path: Path | str | None = None, session_id: str | None = Non
 
 __all__ = [
     "STATE_VERSION",
+    "StateValidationError",
+    "state_from_raw",
     "HISTORY_LIMIT",
     "STALE_AFTER",
     "EXECUTION_TTL",

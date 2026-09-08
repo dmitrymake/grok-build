@@ -382,10 +382,17 @@ def sanitize(
             leaks.append(f"malformed evidence_result[{index}]")
             continue
         evidence_ref = str(item.get("evidence_ref") or "")
-        for field, value in (("kind", kind), ("name", name), ("status", status), ("evidence_ref", evidence_ref)):
+        for field_name, value in (
+            ("kind", kind),
+            ("name", name),
+            ("status", status),
+            ("evidence_ref", evidence_ref),
+        ):
             evidence_leak = _identity_leak(value, matchers)
             if evidence_leak:
-                leaks.append(f"identity term in evidence_result[{index}].{field}: {evidence_leak}")
+                leaks.append(
+                    f"identity term in evidence_result[{index}].{field_name}: {evidence_leak}"
+                )
         facts.append(EvidenceFact(kind, name, status, evidence_ref))
     traces = bounded_traces(candidate.traces)
     for index, trace in enumerate(traces):
@@ -540,7 +547,11 @@ def aggregate_opinions(
     total = len(votes)
     margin = abs(count_a - count_b) / total if total else 0.0
     by_order = {
-        order: [item for item in reads if valid and (item.first, item.second) == order and not item.abstained]
+        order: [
+            item
+            for item in reads
+            if valid and (item.first, item.second) == order and not item.abstained
+        ]
         for order in ((a.label, b.label), (b.label, a.label))
     }
     position_bias = None
@@ -600,7 +611,9 @@ def compare(
             deterministic_status="validation_error",
             comparison_id=comparison_id,
         )
-    gate = decide_gate({a.label: _candidate_checks(contract, a), b.label: _candidate_checks(contract, b)})
+    gate = decide_gate(
+        {a.label: _candidate_checks(contract, a), b.label: _candidate_checks(contract, b)}
+    )
     results = _requirement_results(contract, a, b)
     failures = tuple(
         f"{item.label}:{check.name}"
@@ -618,7 +631,9 @@ def compare(
         "comparison_id": comparison_id,
     }
     if gate.outcome == "reject_all":
-        return Verdict("reject_all", 1.0, reason_codes=("deterministic_reject", "reject_all"), **common)
+        return Verdict(
+            "reject_all", 1.0, reason_codes=("deterministic_reject", "reject_all"), **common
+        )
     if gate.outcome == "abstain":
         return Verdict(
             "needs_discriminating_test",

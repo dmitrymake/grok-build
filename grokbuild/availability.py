@@ -13,7 +13,7 @@ from typing import Any, Mapping
 from grokbuild import discovery
 from grokbuild.evidence import FailureSignal
 from grokbuild.roles import RoleRegistry, credential_present
-from grokbuild.state import RuntimeState, default_state_path
+from grokbuild.state import RuntimeState, default_state_path, state_from_raw
 from grokbuild.persist import atomic_update_json
 
 
@@ -185,9 +185,7 @@ def _model_endpoint_availability(
             state_path = state.source_path or default_state_path()
 
             def clear_hold(raw: object) -> dict[str, object]:
-                restored = (
-                    RuntimeState.from_dict(raw) if isinstance(raw, Mapping) else RuntimeState()
-                )
+                restored = state_from_raw(raw, state_path)
                 restored.clear_provider_unavailable(endpoint.provider)
                 return restored.to_dict()
 

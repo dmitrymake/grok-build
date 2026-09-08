@@ -150,7 +150,9 @@ def test_fanout_verify_not_found_releases_every_track(tmp: Path) -> None:
     assert bind_verify_task_tx(path, "verify-fanout-a", "verify-task", "verify/0") == "verify/0"
     assert bind_verify_task_tx(path, "verify-fanout-b", "verify-task", "verify/0") == "verify/0"
     assert release_unresolvable_binding_tx(path, SID, "verify-fanout-a", "verify-task") == "streak"
-    assert release_unresolvable_binding_tx(path, SID, "verify-fanout-a", "verify-task") == "released"
+    assert (
+        release_unresolvable_binding_tx(path, SID, "verify-fanout-a", "verify-task") == "released"
+    )
     for decision_id in ("verify-fanout-a", "verify-fanout-b"):
         track = load_state(path).get_execution(decision_id)
         assert track is not None and not track.verify_tasks
@@ -223,7 +225,9 @@ def test_stale_linear_failure_does_not_steal_replacement_binding(tmp: Path) -> N
     setup_environment(tmp)
     path = default_state_path()
     decision_id = "stale-linear-replacement"
-    ensure_execution_tx(path, decision_id, SID, 1, [{"role": "explore", "required": True, "kind": "spawn"}])
+    ensure_execution_tx(
+        path, decision_id, SID, 1, [{"role": "explore", "required": True, "kind": "spawn"}]
+    )
     record_stage_tx(path, decision_id, "requested", role="explore")
     bind_linear_stage_task_tx(path, decision_id, "explore", "A")
     release_unresolvable_binding_tx(path, SID, decision_id, "A")
@@ -243,7 +247,9 @@ def test_stale_review_inconclusive_does_not_steal_replacement_binding(tmp: Path)
     setup_environment(tmp)
     path = default_state_path()
     decision_id = "stale-review-replacement"
-    ensure_execution_tx(path, decision_id, SID, 1, [{"role": "review-hard", "required": True, "kind": "spawn"}])
+    ensure_execution_tx(
+        path, decision_id, SID, 1, [{"role": "review-hard", "required": True, "kind": "spawn"}]
+    )
     record_stage_tx(path, decision_id, "requested", role="review-hard")
     bind_linear_stage_task_tx(path, decision_id, "review-hard", "A")
     release_unresolvable_binding_tx(path, SID, decision_id, "A")

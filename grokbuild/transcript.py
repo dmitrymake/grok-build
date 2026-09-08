@@ -55,6 +55,7 @@ def _pin_session_kind(session_id: str, kind: str) -> None:
     global _SESSION_KIND_CACHE
     path = sidecar_path("session-kinds.json")
     now = time.time()
+
     def update(data):
         pins = dict(data) if isinstance(data, dict) else {}
         pins[session_id] = {"kind": kind, "seen_at": now}
@@ -62,8 +63,10 @@ def _pin_session_kind(session_id: str, kind: str) -> None:
             oldest = min(pins, key=lambda key: float(pins[key].get("seen_at", 0)))
             del pins[oldest]
         return pins
+
     atomic_update_json(path, update, default={})
     _SESSION_KIND_CACHE = None
+
 
 SESSION_ID_RE = re.compile(r"^[0-9a-fA-F-]{8,72}$")
 

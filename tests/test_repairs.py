@@ -32,8 +32,14 @@ def test_state_dir_empty_and_relative_xdg_fall_back(monkeypatch: pytest.MonkeyPa
 
 
 def test_background_failure_is_terminal_but_ack_is_incomplete() -> None:
-    assert spawn_result_status({"background": True, "toolResult": "failed: worker exited"}) == "failure"
-    assert spawn_result_status({"background": True, "toolResult": "Task started in background"}) == "incomplete"
+    assert (
+        spawn_result_status({"background": True, "toolResult": "failed: worker exited"})
+        == "failure"
+    )
+    assert (
+        spawn_result_status({"background": True, "toolResult": "Task started in background"})
+        == "incomplete"
+    )
 
 
 def test_outer_tool_payload_semantics() -> None:

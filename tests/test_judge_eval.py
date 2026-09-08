@@ -11,9 +11,7 @@ def test_repeated_perfect_adversarial_canaries_signal_contamination():
 
 
 def test_canary_scoring_is_incomplete_without_full_planned_coverage():
-    missing_case = evaluate_canaries(
-        "v1", {"one": "PASS", "two": "FAIL"}, {"one": ["PASS"] * 3}
-    )
+    missing_case = evaluate_canaries("v1", {"one": "PASS", "two": "FAIL"}, {"one": ["PASS"] * 3})
     assert not missing_case.complete
     assert missing_case.score == 0.0
     wrong_repetitions = evaluate_canaries(
@@ -43,7 +41,8 @@ def test_challenger_fixture_without_endpoints_remains_unavailable():
     profiles = load_profiles()
     registry = load_registry()
     without_challengers = {
-        model: meta for model, meta in registry.provider_catalog.items()
+        model: meta
+        for model, meta in registry.provider_catalog.items()
         if model not in {"gpt-oss-120b", "gpt-oss-20b", "qwen-qwq-32b"}
     }
     fixture_registry = registry.with_provider_catalog(without_challengers)
@@ -55,7 +54,8 @@ def test_bound_challengers_compose_from_live_registry():
     stages = compose_judge_challengers(profiles["judge-challengers"], registry=load_registry())
     assert len(stages) == 1
     assert [member.role for member in stages[0].members] == [
-        "judge-challenger-agentic", "judge-challenger-structural"
+        "judge-challenger-agentic",
+        "judge-challenger-structural",
     ]
     registry = load_registry()
     assert registry.get("judge-challenger-agentic").model == "gpt-oss-120b"

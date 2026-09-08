@@ -163,7 +163,9 @@ class JudgeCalibrationRecord:
     schema: str = JUDGE_CALIBRATION_SCHEMA
 
     def to_dict(self) -> dict[str, Any]:
-        aggregate = dict(self.comparison_aggregate) if self.comparison_aggregate is not None else None
+        aggregate = (
+            dict(self.comparison_aggregate) if self.comparison_aggregate is not None else None
+        )
         if aggregate is not None:
             try:
                 aggregate_size = len(

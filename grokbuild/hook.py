@@ -511,8 +511,10 @@ def handle_pre_tool(data: dict, spec: dict) -> None:
 
     track = _load_execution(decision_id) if gate_active else None
     next_stage = _next_required_spawn_stage(track) if track else None
-    recon_tool = tool in CONDUCTOR_RECON_TOOLS or tool == "monitor" or (
-        tool == "run_terminal_command" and is_recon_shell(_tool_command(data))
+    recon_tool = (
+        tool in CONDUCTOR_RECON_TOOLS
+        or tool == "monitor"
+        or (tool == "run_terminal_command" and is_recon_shell(_tool_command(data)))
     )
 
     if tool in SCHEDULER_WRITE_TOOLS:
@@ -867,7 +869,9 @@ def handle_stop(data: dict, spec: dict) -> None:
 
     if reason == "end_turn" and mode == "dynamic" and not block:
         debt = load_state(default_state_path()).latest_session_debt(
-            session_id, debt_window, excluded_decision_id=decision_id,
+            session_id,
+            debt_window,
+            excluded_decision_id=decision_id,
             max_stop_blocks=stop_limit,
         )
         if debt is not None:

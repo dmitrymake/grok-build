@@ -233,7 +233,8 @@ def _git_has_write_flag(tokens: list[str]) -> bool:
     subcommand = args[0]
     flags = GIT_SUBCOMMAND_WRITE_FLAGS.get(subcommand, frozenset())
     return any(
-        token == flag or token.startswith(flag + "=")
+        token == flag
+        or token.startswith(flag + "=")
         or (subcommand == "grep" and flag == "-O" and token.startswith("-O"))
         for token in tokens
         for flag in flags
@@ -256,18 +257,14 @@ def _is_readonly_shell_segment(tokens: list[str]) -> bool:
     if name == "git":
         return _is_readonly_git(args)
     if name == "sort":
-        if _has_output_target(args) or any(
-            re.fullmatch(r"-[a-z]*o.*", token)
-            for token in args
-        ):
+        if _has_output_target(args) or any(re.fullmatch(r"-[a-z]*o.*", token) for token in args):
             return False
     elif name in {"diff", "cmp", "comm"} and _has_output_target(args):
         return False
     if name == "uniq" and _uniq_has_positional_output(args):
         return False
     if name == "rg" and any(
-        token == "--pre"
-        or token.startswith(("--pre=", "--pre-glob", "--pre-glob="))
+        token == "--pre" or token.startswith(("--pre=", "--pre-glob", "--pre-glob="))
         for token in args
     ):
         return False
@@ -317,8 +314,7 @@ def readonly_shell_verdict(command: str | None) -> str:
         if name == "find" and any(flag in FIND_WRITE_FLAGS for flag in args):
             return "write"
         if name == "rg" and any(
-            token == "--pre"
-            or token.startswith(("--pre=", "--pre-glob", "--pre-glob="))
+            token == "--pre" or token.startswith(("--pre=", "--pre-glob", "--pre-glob="))
             for token in args
         ):
             return "write"

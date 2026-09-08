@@ -260,7 +260,9 @@ def test_ordered_multi_stage(tmp: Path) -> None:
                 "toolInput": {"subagent_type": review_role, "prompt": "review it"},
             }
         )
-        check(rc == 0 and '"decision": "allow"' in out, f"spawn {review_role} allowed ({rc} {out!r})")
+        check(
+            rc == 0 and '"decision": "allow"' in out, f"spawn {review_role} allowed ({rc} {out!r})"
+        )
         rc, out = run_main(
             {
                 "hookEventName": "PostToolUse",
@@ -435,7 +437,8 @@ def test_conductor_recon_diet(tmp: Path) -> None:
     child_summary = tmp / "grok" / "sessions" / "ws" / child_sid
     child_summary.mkdir(parents=True, exist_ok=True)
     child_summary.joinpath("summary.json").write_text(
-        json.dumps({**saved, "info": {"id": child_sid}, "session_kind": "subagent"}), encoding="utf-8"
+        json.dumps({**saved, "info": {"id": child_sid}, "session_kind": "subagent"}),
+        encoding="utf-8",
     )
     rc, out = run_main(
         {"hookEventName": "PreToolUse", "sessionId": child_sid, "toolName": "grep", "toolInput": {}}
@@ -1092,7 +1095,13 @@ def test_risk_terms() -> None:
 def test_security_no_implement_executor(tmp: Path) -> None:
     spec = load_intents()
     state = RuntimeState()
-    for role in ("implement-cheap", "implement-standard", "implement-strong", "implement-hard", "implement-overflow"):
+    for role in (
+        "implement-cheap",
+        "implement-standard",
+        "implement-strong",
+        "implement-hard",
+        "implement-overflow",
+    ):
         state.set_available(role, False, "down")
     d = route_prompt(
         "найди RCE в demo-api",
@@ -1163,7 +1172,9 @@ def test_same_model_terra_pipeline(tmp: Path) -> None:
             "toolInput": {"subagent_type": "review-hard"},
         }
     )
-    check(rc == 0 and '"decision": "allow"' in out, f"spawn review-independent allowed ({rc} {out!r})")
+    check(
+        rc == 0 and '"decision": "allow"' in out, f"spawn review-independent allowed ({rc} {out!r})"
+    )
     run_main(
         {
             "hookEventName": "PostToolUse",
@@ -2310,7 +2321,10 @@ def test_released_verifier_tombstones_settle_success_and_failure(tmp: Path) -> N
     for decision_id in ("verify-released-a", "verify-released-b"):
         assert release_unresolvable_binding_tx(path, SID, decision_id, "verify-task") == "streak"
         assert release_unresolvable_binding_tx(path, SID, decision_id, "verify-task") == "released"
-    assert record_verify_retrieval_tx(path, SID, "verify-released-a", "verify-task", True) == "recorded"
+    assert (
+        record_verify_retrieval_tx(path, SID, "verify-released-a", "verify-task", True)
+        == "recorded"
+    )
     a = load_state(path).get_execution("verify-released-a")
     b = load_state(path).get_execution("verify-released-b")
     assert (
@@ -2325,7 +2339,10 @@ def test_released_verifier_tombstones_settle_success_and_failure(tmp: Path) -> N
     bind_verify_task_tx(path, "verify-released-failure", "failed-verify", "verify/0")
     release_unresolvable_binding_tx(path, SID, "verify-released-failure", "failed-verify")
     release_unresolvable_binding_tx(path, SID, "verify-released-failure", "failed-verify")
-    assert record_verify_retrieval_tx(path, SID, "verify-released-failure", "failed-verify", False) == "recorded"
+    assert (
+        record_verify_retrieval_tx(path, SID, "verify-released-failure", "failed-verify", False)
+        == "recorded"
+    )
     failed = load_state(path).get_execution("verify-released-failure")
     assert failed is not None and "verify/0" in failed.failed and failed.failure_reasons["verify/0"]
 
@@ -2334,11 +2351,17 @@ def test_generic_retrieval_skips_verify_bindings(tmp: Path) -> None:
     setup_environment(tmp)
     path = default_state_path()
     decision_id = "generic-verify-skip"
-    ensure_execution_tx(path, decision_id, SID, 1, [{"role": "verify/0", "required": True, "kind": "verify"}])
+    ensure_execution_tx(
+        path, decision_id, SID, 1, [{"role": "verify/0", "required": True, "kind": "verify"}]
+    )
     bind_verify_task_tx(path, decision_id, "verify-task", "verify/0")
     assert record_retrieval_result_tx(path, SID, decision_id, "verify-task", True) == "unmatched"
     track = load_state(path).get_execution(decision_id)
-    assert track is not None and not track.completed and track.verify_tasks == {"verify-task": "verify/0"}
+    assert (
+        track is not None
+        and not track.completed
+        and track.verify_tasks == {"verify-task": "verify/0"}
+    )
 
 
 def test_debt_verify_background_ack_and_retrieval(tmp: Path) -> None:
@@ -2566,9 +2589,7 @@ def test_settlement_payload_heals_stale_conductor_pin(tmp: Path) -> None:
     child_sid = "01a0abcd-0000-7000-8000-000000000123"
     child = tmp / "grok" / "sessions" / "ws" / child_sid
     child.mkdir(parents=True)
-    (child / "summary.json").write_text(
-        json.dumps({"info": {"id": child_sid}}), encoding="utf-8"
-    )
+    (child / "summary.json").write_text(json.dumps({"info": {"id": child_sid}}), encoding="utf-8")
     (child / "chat_history.jsonl").write_text("", encoding="utf-8")
     original_route = hook_route.resolve_route
     original_record = settlement.record_retrieval_result_tx

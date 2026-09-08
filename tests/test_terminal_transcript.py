@@ -34,7 +34,9 @@ def test_later_event_after_turn_end_is_nonterminal(monkeypatch, tmp_path: Path) 
     folder.mkdir()
     (folder / "summary.json").write_text(json.dumps({"session_kind": "subagent"}), encoding="utf-8")
     history = folder / "chat_history.jsonl"
-    history.write_text(json.dumps({"type": "assistant", "content": "done"}) + "\n", encoding="utf-8")
+    history.write_text(
+        json.dumps({"type": "assistant", "content": "done"}) + "\n", encoding="utf-8"
+    )
     (folder / "events.jsonl").write_text(
         json.dumps({"type": "turn_ended"}) + "\n" + json.dumps({"type": "tool_started"}) + "\n",
         encoding="utf-8",
@@ -49,7 +51,9 @@ def test_malformed_events_are_nonterminal(monkeypatch, tmp_path: Path) -> None:
     folder.mkdir()
     (folder / "summary.json").write_text(json.dumps({"session_kind": "subagent"}), encoding="utf-8")
     history = folder / "chat_history.jsonl"
-    history.write_text(json.dumps({"type": "assistant", "content": "done"}) + "\n", encoding="utf-8")
+    history.write_text(
+        json.dumps({"type": "assistant", "content": "done"}) + "\n", encoding="utf-8"
+    )
     (folder / "events.jsonl").write_text('{"type":"turn_ended"}\n{torn', encoding="utf-8")
     monkeypatch.setattr(settlement, "_session_dir", lambda _task_id: folder)
     assert not settlement._child_transcript_is_terminal(task_id, history)
@@ -61,7 +65,9 @@ def test_legacy_summary_status_is_terminal(monkeypatch, tmp_path: Path) -> None:
     folder.mkdir()
     (folder / "summary.json").write_text(json.dumps({"status": "completed"}), encoding="utf-8")
     history = folder / "chat_history.jsonl"
-    history.write_text(json.dumps({"type": "assistant", "content": "done"}) + "\n", encoding="utf-8")
+    history.write_text(
+        json.dumps({"type": "assistant", "content": "done"}) + "\n", encoding="utf-8"
+    )
     monkeypatch.setattr(settlement, "_session_dir", lambda _task_id: folder)
     assert settlement._child_transcript_is_terminal(task_id, history)
 
@@ -86,7 +92,9 @@ def test_unknown_session_shape_remains_nonterminal(monkeypatch, tmp_path: Path) 
     folder.mkdir()
     (folder / "summary.json").write_text(json.dumps({"session_kind": "subagent"}), encoding="utf-8")
     history = folder / "chat_history.jsonl"
-    history.write_text(json.dumps({"type": "assistant", "content": "done"}) + "\n", encoding="utf-8")
+    history.write_text(
+        json.dumps({"type": "assistant", "content": "done"}) + "\n", encoding="utf-8"
+    )
     monkeypatch.setattr(settlement, "_session_dir", lambda _task_id: folder)
 
     assert not settlement._child_transcript_is_terminal(task_id, history)

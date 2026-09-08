@@ -203,7 +203,9 @@ def test_judge_rereads_are_bounded_and_blind():
     assert len(stages) == 1
     assert len(stages[0].members) == 3
     assert [member.reason for member in stages[0].members] == [
-        "compare A then B", "compare B then A", "compare A then B"
+        "compare A then B",
+        "compare B then A",
+        "compare A then B",
     ]
 
 
@@ -215,7 +217,8 @@ def test_disabled_challengers_never_enter_a_panel_but_opt_in_bound_roles_do():
     )
     assert len(stages) == 1
     assert [member.role for member in stages[0].members] == [
-        "judge-challenger-agentic", "judge-challenger-structural"
+        "judge-challenger-agentic",
+        "judge-challenger-structural",
     ]
     assert registry.get("judge-challenger-agentic").model == "gpt-oss-120b"
     assert registry.get("judge-challenger-structural").model == "gpt-oss-120b"

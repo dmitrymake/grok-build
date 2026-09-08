@@ -20,7 +20,14 @@ V3_REQUIRED = (
     "capability_boundary_digest",
 )
 FORBIDDEN_JUDGE_MATERIAL = frozenset(
-    {"reference_solution", "expected_patch", "answer_key", "verifier_source", "trajectory", "chain_of_thought"}
+    {
+        "reference_solution",
+        "expected_patch",
+        "answer_key",
+        "verifier_source",
+        "trajectory",
+        "chain_of_thought",
+    }
 )
 VARIANTS = {
     "single-best-agent",
@@ -165,7 +172,9 @@ def _validate_cross_fields(record: Any) -> list[str]:
             actor_sets = []
             for actor in ("proposer", "applier", "judge", "grader"):
                 values = boundary.get(actor)
-                if not isinstance(values, list) or not all(isinstance(item, str) for item in values):
+                if not isinstance(values, list) or not all(
+                    isinstance(item, str) for item in values
+                ):
                     errors.append(f"capability boundary {actor} must be a string list")
                 else:
                     actor_sets.append((actor, set(values)))
@@ -239,7 +248,9 @@ def _validate_cross_fields(record: Any) -> list[str]:
                     if read_index >= len(base) and (
                         not isinstance(invocation_id, str) or not invocation_id
                     ):
-                        errors.append(f"{prefix} reread[{read_index - len(base)}] lacks invocation_id")
+                        errors.append(
+                            f"{prefix} reread[{read_index - len(base)}] lacks invocation_id"
+                        )
                         reads_valid = False
                     if isinstance(invocation_id, str) and invocation_id:
                         invocation_ids.append(invocation_id)
@@ -268,7 +279,9 @@ def _validate_cross_fields(record: Any) -> list[str]:
                         item.get("prefers") for item in base if isinstance(item, Mapping)
                     ]
                     count_a, count_b = votes.count(a), votes.count(b)
-                    expected_final = "A" if count_a > count_b else "B" if count_b > count_a else "ABSTAIN"
+                    expected_final = (
+                        "A" if count_a > count_b else "B" if count_b > count_a else "ABSTAIN"
+                    )
                     expected_margin = abs(count_a - count_b) / len(votes) if votes else 0.0
                     declared_margin = aggregate.get("margin")
                     if (
@@ -279,6 +292,7 @@ def _validate_cross_fields(record: Any) -> list[str]:
                         or not math.isclose(float(declared_margin), expected_margin)
                     ):
                         errors.append(f"{prefix} winning result is unsupported by its reads")
+
                 def contains_forbidden(value: Any) -> bool:
                     if isinstance(value, Mapping):
                         return any(
@@ -290,8 +304,11 @@ def _validate_cross_fields(record: Any) -> list[str]:
                     if isinstance(value, list):
                         return any(contains_forbidden(item) for item in value)
                     return False
+
                 if contains_forbidden(aggregate):
-                    errors.append(f"comparison_aggregates[{index}] contains forbidden reference material")
+                    errors.append(
+                        f"comparison_aggregates[{index}] contains forbidden reference material"
+                    )
     candidate_supply = record.get("candidate_supply")
     if not _number(candidate_supply) or not 0.0 <= float(candidate_supply) <= 1.0:
         errors.append("candidate_supply must be a number from 0 to 1")

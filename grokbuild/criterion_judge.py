@@ -117,11 +117,15 @@ def judge_criterion_token(
     except (TypeError, ValueError):
         threshold = math.nan
     if not math.isfinite(threshold) or threshold < 0.0:
-        return CriterionTokenVerdict("ABSTAIN_LOGITS_UNAVAILABLE", normalized, None, threshold, False)
+        return CriterionTokenVerdict(
+            "ABSTAIN_LOGITS_UNAVAILABLE", normalized, None, threshold, False
+        )
     if normalized not in TOKEN_OUTCOMES:
         return CriterionTokenVerdict("ABSTAIN_MALFORMED_TOKEN", normalized, None, threshold, False)
     if not token_logprobs:
-        return CriterionTokenVerdict("ABSTAIN_LOGITS_UNAVAILABLE", normalized, None, threshold, False)
+        return CriterionTokenVerdict(
+            "ABSTAIN_LOGITS_UNAVAILABLE", normalized, None, threshold, False
+        )
     try:
         aliases: dict[str, list[float]] = {}
         for raw_name, score in token_logprobs.items():
@@ -133,9 +137,13 @@ def judge_criterion_token(
                 aliases.setdefault(name, []).append(value)
         scores = {name: _logsumexp(values) for name, values in aliases.items()}
     except (AttributeError, TypeError, ValueError):
-        return CriterionTokenVerdict("ABSTAIN_LOGITS_UNAVAILABLE", normalized, None, threshold, False)
+        return CriterionTokenVerdict(
+            "ABSTAIN_LOGITS_UNAVAILABLE", normalized, None, threshold, False
+        )
     if normalized not in scores or len(scores) < 2:
-        return CriterionTokenVerdict("ABSTAIN_LOGITS_UNAVAILABLE", normalized, None, threshold, False)
+        return CriterionTokenVerdict(
+            "ABSTAIN_LOGITS_UNAVAILABLE", normalized, None, threshold, False
+        )
     alternatives = [score for name, score in scores.items() if name != normalized]
     margin = scores[normalized] - max(alternatives)
     if normalized == "ABSTAIN" or margin <= threshold:

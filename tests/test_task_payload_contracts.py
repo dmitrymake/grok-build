@@ -1151,19 +1151,24 @@ def test_not_found_fallback_without_terminal_evidence_does_not_settle_success(tm
     original_statuses = settlement._retrieval_task_statuses
     original_result_status = settlement._retrieval_result_status
     try:
-        hook_route.resolve_route = lambda *args, **kwargs: {"decision_id": decision_id, "mode": "dynamic"}
+        hook_route.resolve_route = lambda *args, **kwargs: {
+            "decision_id": decision_id,
+            "mode": "dynamic",
+        }
         settlement._retrieval_task_statuses = lambda data, requested_ids=None: {
             requested_ids[0]: "not_found"
         }
         settlement._retrieval_result_status = lambda data, requested_ids=None: "not_found"
         for _ in range(2):
-            run_main({
-                "hookEventName": "PostToolUse",
-                "sessionId": SID,
-                "toolName": "get_command_or_subagent_output",
-                "toolInput": {"task_ids": [task_id]},
-                "toolResult": {},
-            })
+            run_main(
+                {
+                    "hookEventName": "PostToolUse",
+                    "sessionId": SID,
+                    "toolName": "get_command_or_subagent_output",
+                    "toolInput": {"task_ids": [task_id]},
+                    "toolResult": {},
+                }
+            )
     finally:
         hook_route.resolve_route = original_route
         settlement._retrieval_task_statuses = original_statuses
@@ -1187,19 +1192,23 @@ def test_not_found_fallback_strict_profile_requires_typed_evidence(tmp: Path) ->
     original_result_status = settlement._retrieval_result_status
     try:
         hook_route.resolve_route = lambda *args, **kwargs: {
-            "decision_id": decision_id, "mode": "dynamic", "profile": "evidence"
+            "decision_id": decision_id,
+            "mode": "dynamic",
+            "profile": "evidence",
         }
         settlement._retrieval_task_statuses = lambda data, requested_ids=None: {
             requested_ids[0]: "not_found"
         }
         settlement._retrieval_result_status = lambda data, requested_ids=None: "not_found"
-        run_main({
-            "hookEventName": "PostToolUse",
-            "sessionId": SID,
-            "toolName": "get_command_or_subagent_output",
-            "toolInput": {"task_ids": [task_id]},
-            "toolResult": {},
-        })
+        run_main(
+            {
+                "hookEventName": "PostToolUse",
+                "sessionId": SID,
+                "toolName": "get_command_or_subagent_output",
+                "toolInput": {"task_ids": [task_id]},
+                "toolResult": {},
+            }
+        )
     finally:
         hook_route.resolve_route = original_route
         settlement._retrieval_task_statuses = original_statuses
@@ -1520,9 +1529,8 @@ def test_duplicate_text_header_failure_wins() -> None:
         "=== Task task-a ===\nStatus: completed\nExit Code: 0"
     )
     check(
-        task_payloads.retrieval_task_statuses(
-            {"toolResult": text}, requested_ids=["task-a"]
-        ) == {"task-a": "failure"},
+        task_payloads.retrieval_task_statuses({"toolResult": text}, requested_ids=["task-a"])
+        == {"task-a": "failure"},
         "duplicate task headers retain the most-severe status",
     )
 
@@ -1551,8 +1559,12 @@ def main() -> int:
         test_real_retrieval_contracts(root / "real")
         test_multi_id_text_statuses_are_downward_only(root / "multi-id-downward")
         test_disk_fallback_closes_evicted_binding(root / "disk-fallback")
-        test_not_found_fallback_without_terminal_evidence_does_not_settle_success(root / "fallback-no-terminal")
-        test_not_found_fallback_strict_profile_requires_typed_evidence(root / "fallback-strict-evidence")
+        test_not_found_fallback_without_terminal_evidence_does_not_settle_success(
+            root / "fallback-no-terminal"
+        )
+        test_not_found_fallback_strict_profile_requires_typed_evidence(
+            root / "fallback-strict-evidence"
+        )
         test_retrieval_transcript_fallback(root / "fallback")
         test_cli_complete(root / "cli")
     return 1 if FAILURES else 0
@@ -1562,6 +1574,4 @@ if __name__ == "__main__":
     run_standalone(main)
 
 
-PYTEST_ONLY = (
-    "test_parallel_binding_rejects_role_mismatch",
-)
+PYTEST_ONLY = ("test_parallel_binding_rejects_role_mismatch",)

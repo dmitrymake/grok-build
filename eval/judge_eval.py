@@ -45,10 +45,14 @@ def evaluate_canaries(
         )
     )
     repetitions = planned_repetitions if complete else 0
-    case_scores = [
-        sum(answer == expected[case_id] for answer in observed[case_id]) / planned_repetitions
-        for case_id in expected
-    ] if complete else []
+    case_scores = (
+        [
+            sum(answer == expected[case_id] for answer in observed[case_id]) / planned_repetitions
+            for case_id in expected
+        ]
+        if complete
+        else []
+    )
     score = sum(case_scores) / len(case_scores) if case_scores else 0.0
     contamination = complete and score == 1.0
     repeatability = (

@@ -119,11 +119,19 @@ def test_reference_solution_and_hidden_verifier_fields_fail_closed() -> None:
     candidate = _candidate(
         "A",
         metadata={"reference_solution": "secret patch"},
-        evidence_results=({"kind": "tests", "name": "suite", "status": "PASS", "verifier_source": "hidden"},),
+        evidence_results=(
+            {"kind": "tests", "name": "suite", "status": "PASS", "verifier_source": "hidden"},
+        ),
     )
     _bundle, leaks = sanitize(candidate)
-    check(any("reference_solution" in leak for leak in leaks), f"reference metadata is refused ({leaks})")
-    check(any("verifier_source" in leak for leak in leaks), f"hidden verifier source is refused ({leaks})")
+    check(
+        any("reference_solution" in leak for leak in leaks),
+        f"reference metadata is refused ({leaks})",
+    )
+    check(
+        any("verifier_source" in leak for leak in leaks),
+        f"hidden verifier source is refused ({leaks})",
+    )
 
 
 def test_artifact_framing_markers_are_inert_in_content() -> None:
@@ -182,7 +190,10 @@ def test_identity_scan_covers_traces_and_evidence_facts() -> None:
     _bundle, trace_leaks = sanitize(
         _candidate("A", traces=("provider glm-5.3 completed",)), IDENTITY_TERMS
     )
-    check(any("trace[0]" in leak for leak in trace_leaks), f"trace identity is refused ({trace_leaks})")
+    check(
+        any("trace[0]" in leak for leak in trace_leaks),
+        f"trace identity is refused ({trace_leaks})",
+    )
     _bundle, fact_leaks = sanitize(
         _candidate(
             "A",
@@ -438,14 +449,24 @@ def test_string_literal_whitespace_differences_do_not_cluster() -> None:
     first = _candidate("A", artifacts={"app.py": 'value = "a  b"\n'})
     second = _candidate("B", artifacts={"app.py": 'value = "a b"\n'})
     clusters = cluster_artifacts((first, second), CONTRACT)
-    check({cluster.members for cluster in clusters} == {("A",), ("B",)}, f"literal bytes differ ({clusters})")
+    check(
+        {cluster.members for cluster in clusters} == {("A",), ("B",)},
+        f"literal bytes differ ({clusters})",
+    )
 
 
 def test_diff_target_file_identity_is_part_of_equivalence() -> None:
-    first = _candidate("A", artifacts={"change.diff": "--- a/one.py\n+++ b/one.py\n@@ -1 +1 @@\n-old\n+new\n"})
-    second = _candidate("B", artifacts={"change.diff": "--- a/two.py\n+++ b/two.py\n@@ -1 +1 @@\n-old\n+new\n"})
+    first = _candidate(
+        "A", artifacts={"change.diff": "--- a/one.py\n+++ b/one.py\n@@ -1 +1 @@\n-old\n+new\n"}
+    )
+    second = _candidate(
+        "B", artifacts={"change.diff": "--- a/two.py\n+++ b/two.py\n@@ -1 +1 @@\n-old\n+new\n"}
+    )
     clusters = cluster_artifacts((first, second), CONTRACT)
-    check({cluster.members for cluster in clusters} == {("A",), ("B",)}, f"diff targets differ ({clusters})")
+    check(
+        {cluster.members for cluster in clusters} == {("A",), ("B",)},
+        f"diff targets differ ({clusters})",
+    )
 
 
 def test_diff_clustering_preserves_change_positions() -> None:

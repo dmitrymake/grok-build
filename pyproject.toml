@@ -11,6 +11,10 @@ requires-python = ">=3.11"
 license = "MIT"
 classifiers = ["Programming Language :: Python :: 3 :: Only", "Environment :: Console"]
 
+[project.optional-dependencies]
+test = ["pytest", "jsonschema"]
+dev = ["ruff==0.9.10"]
+
 [project.scripts]
 grok-route = "grokbuild.cli:main"
 
@@ -26,6 +30,7 @@ pythonpath = ["."]
 
 [tool.ruff]
 line-length = 100
+extend-exclude = ["bench"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["E402"]

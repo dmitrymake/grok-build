@@ -30,7 +30,13 @@ from grokbuild.payloads import (
 from grokbuild.persist import atomic_update_json, parse_iso_utc
 from grokbuild.policy import load_profiles
 from grokbuild.shell_guard import _tool_command, is_readonly_shell
-from grokbuild.state import RuntimeState, default_state_path, load_state, pending_child_bindings
+from grokbuild.state import (
+    RuntimeState,
+    default_state_path,
+    load_state,
+    pending_child_bindings,
+    state_from_raw,
+)
 from grokbuild.task_evidence import (
     MAX_ITEMS,
     EvidenceOutcome,
@@ -118,7 +124,14 @@ def _child_transcript_is_terminal(task_id: str, history_path: Path) -> bool:
         if isinstance(data, dict):
             for key in ("status", "state", "session_state", "sessionStatus"):
                 value = str(data.get(key) or "").casefold()
-                if value in {"completed", "complete", "success", "succeeded", "finished", "terminated"}:
+                if value in {
+                    "completed",
+                    "complete",
+                    "success",
+                    "succeeded",
+                    "finished",
+                    "terminated",
+                }:
                     return True
         events = folder / "events.jsonl"
         if events.is_file():
@@ -138,7 +151,8 @@ def _child_transcript_is_terminal(task_id: str, history_path: Path) -> bool:
         if record.get("type") == "assistant" and (
             record.get("final") is True
             or record.get("terminal") is True
-            or str(record.get("session_state") or "").casefold() in {"completed", "complete", "finished"}
+            or str(record.get("session_state") or "").casefold()
+            in {"completed", "complete", "finished"}
         ):
             return True
     return False
@@ -447,9 +461,8 @@ def _evidence_seam(
     was attached before the spawn, and only a verified result completes a stage.
     """
     current_policy = _evidence_policy(route)
-    binding = (
-        resolved_binding
-        or resolve_task_binding(default_state_path(), session_id, decision_id, task_id)
+    binding = resolved_binding or resolve_task_binding(
+        default_state_path(), session_id, decision_id, task_id
     )
     if binding is None:
         return legacy_success
@@ -457,7 +470,8 @@ def _evidence_seam(
     bound_policy = _persisted_evidence_policy(bound_decision)
     policy = (
         "strict"
-        if "strict" in {
+        if "strict"
+        in {
             str(current_policy or "").strip().casefold(),
             str(bound_policy or "").strip().casefold(),
         }
@@ -612,11 +626,7 @@ def _open_quota_circuit(
     deadline = _quota_reset_deadline(role_name, provider, now) or now + cooldown
 
     def update(raw: object) -> dict[str, object]:
-        state = (
-            RuntimeState.from_dict(raw)
-            if isinstance(raw, Mapping)
-            else RuntimeState(source_path=default_state_path())
-        )
+        state = state_from_raw(raw, default_state_path())
         state.set_provider_unavailable(provider, deadline, "quota/429", now=now)
         return state.to_dict()
 
@@ -706,7 +716,7 @@ def _retrieval_quota_circuits(
 def _update_reactive_marker(
     raw: object, route: Mapping[str, object], key: str, marker: dict
 ) -> dict[str, object]:
-    current = RuntimeState.from_dict(raw) if isinstance(raw, Mapping) else RuntimeState()
+    current = state_from_raw(raw, default_state_path())
     current_track = current.get_execution(str(route.get("decision_id") or ""))
     if (
         current_track is not None
@@ -777,7 +787,7 @@ def _reactive_failover(
     def update(raw: object) -> dict[str, object]:
         nonlocal persisted
         persisted = False
-        current = RuntimeState.from_dict(raw) if isinstance(raw, Mapping) else RuntimeState()
+        current = state_from_raw(raw, default_state_path())
         current_track = current.get_execution(str(route.get("decision_id") or ""))
         if (
             current_track is not None

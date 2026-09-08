@@ -149,7 +149,9 @@ def _merge_profile(name: str, raw: Mapping[str, Any], base: Profile) -> Profile:
             if raw.get("planner_market") is not None
             else base.planner_market
         ),
-        planner_market_width=max(3, min(4, int(raw.get("planner_market_width", base.planner_market_width)))),
+        planner_market_width=max(
+            3, min(4, int(raw.get("planner_market_width", base.planner_market_width)))
+        ),
         artifact_judge=(
             bool(raw["artifact_judge"])
             if raw.get("artifact_judge") is not None

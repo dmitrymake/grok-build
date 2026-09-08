@@ -128,7 +128,9 @@ def _gate_candidates(contract: TaskContract, candidates: Sequence[Candidate]):
 
 def _hard_failures(contract: TaskContract, candidate: Candidate) -> tuple[str, ...]:
     gate = _gate_candidates(contract, (candidate,))
-    return tuple(check.name for item in gate.candidates for check in item.checks if check.status == "FAIL")
+    return tuple(
+        check.name for item in gate.candidates for check in item.checks if check.status == "FAIL"
+    )
 
 
 def select(

@@ -839,7 +839,11 @@ class RoleRegistry:
                         "msg": f"canonical alias target '{canonical}' is not a declared role",
                     }
                 )
-            elif alias_role is not None and (alias_role.model, alias_role.reasoning_effort, alias_role.autonomy) != (
+            elif alias_role is not None and (
+                alias_role.model,
+                alias_role.reasoning_effort,
+                alias_role.autonomy,
+            ) != (
                 canonical_role.model,
                 canonical_role.reasoning_effort,
                 canonical_role.autonomy,
@@ -853,7 +857,13 @@ class RoleRegistry:
                 )
         for name, role in sorted(self._roles.items()):
             if role.autonomy not in VALID_AUTONOMY:
-                issues.append({"level": "error", "role": str(name), "msg": f"autonomy must be one of: {', '.join(sorted(VALID_AUTONOMY))}"})
+                issues.append(
+                    {
+                        "level": "error",
+                        "role": str(name),
+                        "msg": f"autonomy must be one of: {', '.join(sorted(VALID_AUTONOMY))}",
+                    }
+                )
             if role.reasoning_effort_issue:
                 issues.append(
                     {"level": "error", "role": str(name), "msg": role.reasoning_effort_issue}
@@ -927,7 +937,11 @@ class RoleRegistry:
             provider = self.provider_catalog.get(role.model) if role.model else None
             if provider is not None and provider.tier == "tryout":
                 issues.append(
-                    {"level": "error", "role": str(name), "msg": "tryout models are never role-routable"}
+                    {
+                        "level": "error",
+                        "role": str(name),
+                        "msg": "tryout models are never role-routable",
+                    }
                 )
             if role.model and model_catalog and role.model not in model_catalog:
                 issues.append(
@@ -1346,14 +1360,19 @@ def load_registry(config_path: Path | str | None = None) -> RoleRegistry:
 
     review_alias = roles.get("review")
     review_canonical = roles.get("review-hard")
-    if review_alias and review_canonical and (
-        review_alias.model,
-        review_alias.reasoning_effort,
-        review_alias.autonomy,
-    ) != (
-        review_canonical.model,
-        review_canonical.reasoning_effort,
-        review_canonical.autonomy,
+    if (
+        review_alias
+        and review_canonical
+        and (
+            review_alias.model,
+            review_alias.reasoning_effort,
+            review_alias.autonomy,
+        )
+        != (
+            review_canonical.model,
+            review_canonical.reasoning_effort,
+            review_canonical.autonomy,
+        )
     ):
         warnings.append("role 'review' is a legacy alias; prefer review-hard")
     for role in roles.values():

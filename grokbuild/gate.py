@@ -385,7 +385,10 @@ def _enforceable_gate(decision_id: str | None, route: dict) -> tuple[bool, str]:
                 warnings = route.setdefault("warnings", [])
                 if "barrier_stall" not in warnings:
                     warnings.append("barrier_stall")
-                return True, f"barrier_stall: barrier {next_stage.stage_id} stalled for {age:.0f}s; spawn retries still require normal member validation"
+                return (
+                    True,
+                    f"barrier_stall: barrier {next_stage.stage_id} stalled for {age:.0f}s; spawn retries still require normal member validation",
+                )
             return False, _barrier_recipe(route, track, next_stage)
         if next_stage.kind in {"judge", "evidence_collection"}:
             return False, _control_plane_recipe(route, next_stage)
@@ -447,6 +450,7 @@ def _bound_task_suffix(track: object | None, role: str) -> str:
         task_id = track.stage_tasks[role]
         return f" Retrieve task {task_id} results one id at a time to settle this stage."
     return ""
+
 
 def _stage_recipe(route: dict, role: str, track: object | None = None) -> str:
     pair = _format_pair(role)

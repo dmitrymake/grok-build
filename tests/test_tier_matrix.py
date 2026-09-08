@@ -44,9 +44,7 @@ def test_primary_endpoint_projects_role_provider() -> None:
 def test_readme_provider_role_matrix() -> None:
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     rows = {}
-    row_pattern = re.compile(
-        r"^\| `([^`]+)`[^|]*\|[^|]*\|[^|]*\|([^|]*)\|$", re.MULTILINE
-    )
+    row_pattern = re.compile(r"^\| `([^`]+)`[^|]*\|[^|]*\|[^|]*\|([^|]*)\|$", re.MULTILINE)
     for provider, roles_text in row_pattern.findall(readme):
         rows[provider] = set(re.findall(r"`([^`]+)`", roles_text))
     providers = load_provider_data()
@@ -63,8 +61,7 @@ def test_tier_matrix() -> None:
     providers = load_provider_data()
     role_map = role_provider_map(providers, load_role_data())
     expected_providers = {
-        provider: roles_for_providers({provider}, role_map)
-        for provider in providers["providers"]
+        provider: roles_for_providers({provider}, role_map) for provider in providers["providers"]
     }
     for provider, expected in expected_providers.items():
         assert roles_for_providers({provider}, role_map) == expected

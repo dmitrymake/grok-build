@@ -1,3 +1,4 @@
+# BENCHMARK FIXTURE — deliberately insecure; never use in production.
 """Upload handling for untrusted clients. See TASK.md."""
 
 import os

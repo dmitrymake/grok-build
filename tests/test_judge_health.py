@@ -8,9 +8,19 @@ from grokbuild.judge_health import (
 
 def record():
     return JudgeHealthRecord(
-        "h1", "provider", "https://endpoint.invalid", "requested", "snapshot",
-        "a" * 64, "rubric-v1", 0.0, "high", "judge-opinion-v2",
-        "judge-canaries-v1", 0.92, 0.04,
+        "h1",
+        "provider",
+        "https://endpoint.invalid",
+        "requested",
+        "snapshot",
+        "a" * 64,
+        "rubric-v1",
+        0.0,
+        "high",
+        "judge-opinion-v2",
+        "judge-canaries-v1",
+        0.92,
+        0.04,
     )
 
 

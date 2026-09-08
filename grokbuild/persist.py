@@ -193,6 +193,26 @@ def _gc_state_temps(path: Path, now: float | None = None) -> None:
                 continue
 
 
+def quarantine_json(path: Path, reason: str | None = None) -> bool:
+    """Move an unreadable state file aside and record the quarantine event."""
+    observed_at = datetime.now(UTC).isoformat()
+    corrupt = path.with_name(
+        f"{path.name}.corrupt-{datetime.now(UTC).strftime('%Y%m%dT%H%M%S%fZ')}"
+    )
+    try:
+        os.replace(path, corrupt)
+    except OSError:
+        return False
+    try:
+        event = {"event": "state_quarantine", "file": path.name, "observed_at": observed_at}
+        if reason:
+            event["reason"] = reason
+        append_jsonl(path.parent / (path.name + ".quarantine.jsonl"), event)
+    except OSError:
+        pass
+    return True
+
+
 def atomic_update_json(
     path: Path,
     updater,
@@ -214,26 +234,7 @@ def atomic_update_json(
                 try:
                     data = json.loads(path.read_text(encoding="utf-8"))
                 except (json.JSONDecodeError, UnicodeDecodeError):
-                    observed_at = datetime.now(UTC).isoformat()
-                    corrupt = path.with_name(
-                        f"{path.name}.corrupt-{datetime.now(UTC).strftime('%Y%m%dT%H%M%S%fZ')}"
-                    )
-                    try:
-                        os.replace(path, corrupt)
-                    except OSError:
-                        pass
-                    else:
-                        try:
-                            append_jsonl(
-                                path.parent / (path.name + ".quarantine.jsonl"),
-                                [{
-                                    "event": "state_quarantine",
-                                    "file": path.name,
-                                    "observed_at": observed_at,
-                                }],
-                            )
-                        except OSError:
-                            pass
+                    quarantine_json(path)
                     data = default
                 except OSError:
                     data = default

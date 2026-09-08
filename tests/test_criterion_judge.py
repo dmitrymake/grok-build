@@ -88,14 +88,26 @@ def test_settled_evidence_never_escalates() -> None:
 
 
 def test_forced_token_requires_real_provider_logits_and_calibrated_margin() -> None:
-    assert judge_criterion_token("PASS", None, calibrated_threshold=0.5).outcome == "ABSTAIN_LOGITS_UNAVAILABLE"
-    assert judge_criterion_token(
-        "PASS", {"PASS": -0.1, "FAIL": -2.0, "ABSTAIN": -3.0}, calibrated_threshold=0.5
-    ).outcome == "PASS"
-    assert judge_criterion_token(
-        "FAIL", {"PASS": -0.2, "FAIL": -0.1, "ABSTAIN": -2.0}, calibrated_threshold=0.5
-    ).outcome == "ABSTAIN"
-    assert judge_criterion_token("yes", {"PASS": 0.0, "FAIL": -1.0}, calibrated_threshold=0.1).outcome == "ABSTAIN_MALFORMED_TOKEN"
+    assert (
+        judge_criterion_token("PASS", None, calibrated_threshold=0.5).outcome
+        == "ABSTAIN_LOGITS_UNAVAILABLE"
+    )
+    assert (
+        judge_criterion_token(
+            "PASS", {"PASS": -0.1, "FAIL": -2.0, "ABSTAIN": -3.0}, calibrated_threshold=0.5
+        ).outcome
+        == "PASS"
+    )
+    assert (
+        judge_criterion_token(
+            "FAIL", {"PASS": -0.2, "FAIL": -0.1, "ABSTAIN": -2.0}, calibrated_threshold=0.5
+        ).outcome
+        == "ABSTAIN"
+    )
+    assert (
+        judge_criterion_token("yes", {"PASS": 0.0, "FAIL": -1.0}, calibrated_threshold=0.1).outcome
+        == "ABSTAIN_MALFORMED_TOKEN"
+    )
 
 
 def test_non_finite_scores_and_thresholds_abstain_uncalibrated() -> None:
@@ -132,12 +144,19 @@ def test_verdict_is_deterministic() -> None:
 
 def test_calibration_window_covers_at_least_two_outcomes():
     assert CALIBRATION_TOP_LOGPROBS == 20
-    assert judge_criterion_token(
-        "PASS", {"PASS": -0.1, "FAIL": -0.35}, calibrated_threshold=0.2
-    ).outcome == "PASS"
-    assert judge_criterion_token(
-        "PASS", {" PASS\n": -0.1, "ĠFAIL": -0.35}, calibrated_threshold=0.2
-    ).outcome == "PASS"
-    assert judge_criterion_token(
-        "PASS", {"PASS": -0.1}, calibrated_threshold=0.2
-    ).outcome == "ABSTAIN_LOGITS_UNAVAILABLE"
+    assert (
+        judge_criterion_token(
+            "PASS", {"PASS": -0.1, "FAIL": -0.35}, calibrated_threshold=0.2
+        ).outcome
+        == "PASS"
+    )
+    assert (
+        judge_criterion_token(
+            "PASS", {" PASS\n": -0.1, "ĠFAIL": -0.35}, calibrated_threshold=0.2
+        ).outcome
+        == "PASS"
+    )
+    assert (
+        judge_criterion_token("PASS", {"PASS": -0.1}, calibrated_threshold=0.2).outcome
+        == "ABSTAIN_LOGITS_UNAVAILABLE"
+    )

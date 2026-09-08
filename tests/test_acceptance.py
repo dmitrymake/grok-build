@@ -555,9 +555,7 @@ def test_review_and_plan_intents() -> None:
         registry=load_registry(REPO_CONFIG),
     )
     check(review.task_class == "review", "direct review task class")
-    check(
-        review.role == "review-hard" and review.model == "glm-5.3", "direct review role/model"
-    )
+    check(review.role == "review-hard" and review.model == "glm-5.3", "direct review role/model")
     check(
         len(review.execution) == 1
         and review.execution[0].role == "review-hard"

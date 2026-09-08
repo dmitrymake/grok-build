@@ -453,7 +453,13 @@ def select_implement_role(
         return f"skipped {name} (unavailable/pressured/failed)"
 
     if destructive:
-        order = ["implement-ops", "implement-hard", "implement-strong", "implement-standard", "implement-cheap"]
+        order = [
+            "implement-ops",
+            "implement-hard",
+            "implement-strong",
+            "implement-standard",
+            "implement-cheap",
+        ]
         desired = "implement-ops"
         reasons.append("tier=ops (firmware/destructive operations)")
     elif preference == "quality" or complexity == "high" or risk == "high":

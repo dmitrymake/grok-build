@@ -37,9 +37,14 @@ def test_standalone_registration() -> None:
 def _pytest_only_names(tree: ast.Module) -> set[str]:
     for node in tree.body:
         if isinstance(node, ast.Assign):
-            if any(isinstance(target, ast.Name) and target.id == "PYTEST_ONLY" for target in node.targets):
+            if any(
+                isinstance(target, ast.Name) and target.id == "PYTEST_ONLY"
+                for target in node.targets
+            ):
                 if isinstance(node.value, (ast.Tuple, ast.List, ast.Set)):
-                    return {item.value for item in node.value.elts if isinstance(item, ast.Constant)}
+                    return {
+                        item.value for item in node.value.elts if isinstance(item, ast.Constant)
+                    }
     return set()
 
 

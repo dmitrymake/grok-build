@@ -1251,10 +1251,11 @@ def import_git(args) -> int:
 
 
 def merge(args) -> int:
-    """Move adjudicated staging cases into the corpus."""
+    """Move adjudicated staging cases into the corpus, recovering interrupted runs."""
     corpus = load(args.corpus, {"version": 1, "cases": []})
     staging = load(args.staging, [])
-    moved, remain = [], []
+    existing = {x.get("id"): x for x in corpus.get("cases", [])}
+    moved, remain, recovered = [], [], []
     for item in staging:
         expect = item.get("expect")
         if expect is None or (isinstance(expect, dict) and expect.get("intent") is None):
@@ -1267,9 +1268,6 @@ def merge(args) -> int:
         ):
             print(f"invalid expect for {item.get('id')}", file=sys.stderr)
             return 1
-        if any(x.get("id") == item.get("id") for x in corpus.get("cases", [])):
-            print(f"duplicate id: {item.get('id')}", file=sys.stderr)
-            return 1
         case = {
             "id": item["id"],
             "prompt": item["prompt"],
@@ -1277,12 +1275,22 @@ def merge(args) -> int:
         }
         if item.get("flag"):
             case["flag"] = item["flag"]
+        prior = existing.get(item.get("id"))
+        if prior is not None:
+            if prior != case:
+                print(f"duplicate id: {item.get('id')}", file=sys.stderr)
+                return 1
+            recovered.append(item["id"])
+            continue
         corpus["cases"].append(case)
+        existing[item["id"]] = case
         moved.append(item["id"])
+    # Corpus replacement is atomic; duplicate staging records are the completed half after a crash.
     dump(args.corpus, corpus, private_dir=state_dir())
     dump(args.staging, remain, private_dir=state_dir())
+    recovered_line = f" recovered={len(recovered)}" if recovered else ""
     print(
-        f"moved={len(moved)}"
+        f"moved={len(moved)}{recovered_line}"
         + (f" ids={','.join(moved)}" if moved else "")
         + "; run ./tests/grok-route-test.sh"
     )

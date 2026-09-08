@@ -45,6 +45,47 @@ printf '{}' | ~/.grok/hooks/route.py
 ./tests/grok-route-test.sh
 ```
 
+## Development
+
+Clone the repository, create a virtual environment, and install the package in editable mode:
+
+```bash
+git clone https://github.com/dmitrymake/grok-build.git
+cd grok-build
+python -m venv .venv
+. .venv/bin/activate
+pip install -e .[dev]
+```
+
+Run the test suite, shell verifiers, documentation projection check, and lint:
+
+```bash
+python -m pytest tests/ -q
+./tests/grok-route-test.sh
+./tests/grok-combine-install-test.sh
+python -m grokbuild.render_docs check
+ruff check .
+```
+
+The main runtime modules live in `grokbuild/`; tests are in `tests/`, design and
+runtime documentation is in `docs/`, and installer/release helpers are in
+`scripts/`. See [`docs/architecture.md`](docs/architecture.md) for the module
+boundaries, stage lifecycle, and on-disk artifacts.
+
+### End-to-end example
+
+For an implementation prompt, `UserPromptSubmit` extracts trusted user text,
+derives features and modifiers, scores the intent, selects an available role,
+and composes the required execution stages. The hook then applies policy gates
+at `PreToolUse`, allowing the next configured spawn (and, where applicable, a
+barrier member) while denying edits by the conductor. A delegated child performs
+the implementation work; `PostToolUse` settlement correlates its result with
+the stage, and any configured exact verifier is admitted when due. `Stop`
+records or blocks unfinished execution debt until the required stages settle.
+This is cooperative supervision and stage gating, not a sandbox or an
+independent security boundary. See [`docs/architecture.md`](docs/architecture.md)
+for the exact lifecycle and composition by intent.
+
 ## Requirements & subscription tiers
 
 The provider-role matrix below is derived from [`grokbuild/providers.json`](grokbuild/providers.json) and [`grokbuild/roles_default.json`](grokbuild/roles_default.json); credential names and provider tier annotations are shown in [`grokbuild/providers.json`](grokbuild/providers.json) and, where configured, [`config/config.example.toml`](config/config.example.toml).

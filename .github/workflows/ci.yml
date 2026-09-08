@@ -30,8 +30,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      # pyproject.toml sets pythonpath=["."], so pytest alone is sufficient.
-      - run: python -m pip install pytest
+      - run: python -m pip install -e ".[test]"
       - run: python3 -m pytest -q
 
   script-runner:
@@ -74,4 +73,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      # Public CI intentionally permits an empty local blacklist; release policy is hermetic.
       - run: ./scripts/release-check.sh
+        env:
+          RELEASE_CHECK_ALLOW_EMPTY_BLACKLIST: 1

@@ -41,9 +41,7 @@ def test_tryout_catalog_models_are_not_role_routable() -> None:
     assert signal is not None and signal.reason == "tryout models are not role-routable"
     issues = patched.validate_roles()
     assert any(
-        issue["level"] == "error"
-        and issue["role"] == "implement-hard"
-        and "tryout" in issue["msg"]
+        issue["level"] == "error" and issue["role"] == "implement-hard" and "tryout" in issue["msg"]
         for issue in issues
     )
 

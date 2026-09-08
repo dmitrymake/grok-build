@@ -97,28 +97,49 @@ def valid():
 def valid_v3():
     record = valid()
     record["schema_version"] = 3
-    record["judge_health_snapshot"] = [{
-        "health_id": "h1", "provider": "p", "endpoint": "e",
-        "requested_model": "m", "resolved_model": "snapshot", "prompt_hash": "hash",
-        "rubric_version": "v1", "temperature": 0.0, "reasoning_effort": "high",
-        "response_schema": "judge-opinion-v2", "canary_battery_version": "v1",
-        "repeatability": 0.9, "position_bias": 0.1,
-    }]
+    record["judge_health_snapshot"] = [
+        {
+            "health_id": "h1",
+            "provider": "p",
+            "endpoint": "e",
+            "requested_model": "m",
+            "resolved_model": "snapshot",
+            "prompt_hash": "hash",
+            "rubric_version": "v1",
+            "temperature": 0.0,
+            "reasoning_effort": "high",
+            "response_schema": "judge-opinion-v2",
+            "canary_battery_version": "v1",
+            "repeatability": 0.9,
+            "position_bias": 0.1,
+        }
+    ]
     record["judge_health_snapshot_digest"] = digest(record["judge_health_snapshot"])
-    record["comparison_aggregates"] = [{
-        "comparison_id": "c1", "candidate_a": "A", "candidate_b": "B",
-        "base_reads": [
-            {"first": "A", "second": "B", "prefers": "A"},
-            {"first": "B", "second": "A", "prefers": "A"},
-        ],
-        "additional_reads": [], "final": "A", "margin": 1.0,
-        "deterministic_status": "proceed", "rejected_candidates": [],
-    }]
+    record["comparison_aggregates"] = [
+        {
+            "comparison_id": "c1",
+            "candidate_a": "A",
+            "candidate_b": "B",
+            "base_reads": [
+                {"first": "A", "second": "B", "prefers": "A"},
+                {"first": "B", "second": "A", "prefers": "A"},
+            ],
+            "additional_reads": [],
+            "final": "A",
+            "margin": 1.0,
+            "deterministic_status": "proceed",
+            "rejected_candidates": [],
+        }
+    ]
     record["canary_battery_digest"] = "canary"
     record["holdout_manifest_digest"] = "holdout"
     record["capability_boundary_snapshot"] = {
-        "proposer": ["propose"], "applier": ["apply"], "judge": ["judge"],
-        "grader": ["grade"], "network": "off", "hermetic": True,
+        "proposer": ["propose"],
+        "applier": ["apply"],
+        "judge": ["judge"],
+        "grader": ["grade"],
+        "network": "off",
+        "hermetic": True,
     }
     record["capability_boundary_digest"] = digest(record["capability_boundary_snapshot"])
     return record
@@ -131,28 +152,49 @@ def test_valid_record_passes():
 def test_v3_judge_snapshots_validate_digests_aggregate_and_boundaries():
     record = valid()
     record["schema_version"] = 3
-    record["judge_health_snapshot"] = [{
-        "health_id": "h1", "provider": "p", "endpoint": "e",
-        "requested_model": "m", "resolved_model": "snapshot", "prompt_hash": "hash",
-        "rubric_version": "v1", "temperature": 0.0, "reasoning_effort": "high",
-        "response_schema": "judge-opinion-v2", "canary_battery_version": "v1",
-        "repeatability": 0.9, "position_bias": 0.1,
-    }]
+    record["judge_health_snapshot"] = [
+        {
+            "health_id": "h1",
+            "provider": "p",
+            "endpoint": "e",
+            "requested_model": "m",
+            "resolved_model": "snapshot",
+            "prompt_hash": "hash",
+            "rubric_version": "v1",
+            "temperature": 0.0,
+            "reasoning_effort": "high",
+            "response_schema": "judge-opinion-v2",
+            "canary_battery_version": "v1",
+            "repeatability": 0.9,
+            "position_bias": 0.1,
+        }
+    ]
     record["judge_health_snapshot_digest"] = digest(record["judge_health_snapshot"])
-    record["comparison_aggregates"] = [{
-        "comparison_id": "c1", "candidate_a": "A", "candidate_b": "B",
-        "base_reads": [
-            {"first": "A", "second": "B", "prefers": "A"},
-            {"first": "B", "second": "A", "prefers": "A"},
-        ],
-        "additional_reads": [], "final": "A", "margin": 1.0,
-        "deterministic_status": "proceed", "rejected_candidates": [],
-    }]
+    record["comparison_aggregates"] = [
+        {
+            "comparison_id": "c1",
+            "candidate_a": "A",
+            "candidate_b": "B",
+            "base_reads": [
+                {"first": "A", "second": "B", "prefers": "A"},
+                {"first": "B", "second": "A", "prefers": "A"},
+            ],
+            "additional_reads": [],
+            "final": "A",
+            "margin": 1.0,
+            "deterministic_status": "proceed",
+            "rejected_candidates": [],
+        }
+    ]
     record["canary_battery_digest"] = "canary"
     record["holdout_manifest_digest"] = "holdout"
     record["capability_boundary_snapshot"] = {
-        "proposer": ["propose"], "applier": ["apply"], "judge": ["judge"],
-        "grader": ["grade"], "network": "off", "hermetic": True,
+        "proposer": ["propose"],
+        "applier": ["apply"],
+        "judge": ["judge"],
+        "grader": ["grade"],
+        "network": "off",
+        "hermetic": True,
     }
     record["capability_boundary_digest"] = digest(record["capability_boundary_snapshot"])
     assert is_valid_run_record(record)
@@ -166,7 +208,9 @@ def test_v3_winner_must_follow_reads_and_proceeding_gate_evidence():
     assert any("unsupported by its reads" in error for error in validate_run_record(contradictory))
     missing_gate = valid_v3()
     del missing_gate["comparison_aggregates"][0]["deterministic_status"]
-    assert any("lacks proceeding gate evidence" in error for error in validate_run_record(missing_gate))
+    assert any(
+        "lacks proceeding gate evidence" in error for error in validate_run_record(missing_gate)
+    )
     abstained = valid_v3()
     abstained["comparison_aggregates"][0]["base_reads"][0]["prefers"] = "abstain"
     assert any("unsupported by its reads" in error for error in validate_run_record(abstained))
@@ -201,7 +245,11 @@ def test_v3_read_confidence_must_be_within_probability_range():
 
 
 def test_v3_malformed_aggregate_containers_return_errors_instead_of_crashing():
-    for field, malformed in (("base_reads", {}), ("additional_reads", "bad"), ("rejected_candidates", {})):
+    for field, malformed in (
+        ("base_reads", {}),
+        ("additional_reads", "bad"),
+        ("rejected_candidates", {}),
+    ):
         record = valid_v3()
         record["comparison_aggregates"][0][field] = malformed
         assert validate_run_record(record)
@@ -221,28 +269,49 @@ def test_v3_grader_capabilities_must_be_explicit_and_disjoint():
 def test_forbidden_material_key_normalization_catches_camel_case() -> None:
     record = valid()
     record["schema_version"] = 3
-    record["judge_health_snapshot"] = [{
-        "health_id": "h1", "provider": "p", "endpoint": "e",
-        "requested_model": "m", "resolved_model": "m", "prompt_hash": "h",
-        "rubric_version": "v1", "temperature": 0.0, "reasoning_effort": "high",
-        "response_schema": "judge-opinion-v2", "canary_battery_version": "v1",
-        "repeatability": 1.0, "position_bias": 0.0,
-    }]
+    record["judge_health_snapshot"] = [
+        {
+            "health_id": "h1",
+            "provider": "p",
+            "endpoint": "e",
+            "requested_model": "m",
+            "resolved_model": "m",
+            "prompt_hash": "h",
+            "rubric_version": "v1",
+            "temperature": 0.0,
+            "reasoning_effort": "high",
+            "response_schema": "judge-opinion-v2",
+            "canary_battery_version": "v1",
+            "repeatability": 1.0,
+            "position_bias": 0.0,
+        }
+    ]
     record["judge_health_snapshot_digest"] = digest(record["judge_health_snapshot"])
-    record["comparison_aggregates"] = [{
-        "comparison_id": "c1", "candidate_a": "A", "candidate_b": "B",
-        "base_reads": [
-            {"first": "A", "second": "B", "prefers": "tie"},
-            {"first": "B", "second": "A", "prefers": "tie"},
-        ], "additional_reads": [], "final": "tie", "margin": 0.0,
-        "deterministic_status": "proceed", "rejected_candidates": [],
-        "referenceSolution": "must be rejected",
-    }]
+    record["comparison_aggregates"] = [
+        {
+            "comparison_id": "c1",
+            "candidate_a": "A",
+            "candidate_b": "B",
+            "base_reads": [
+                {"first": "A", "second": "B", "prefers": "tie"},
+                {"first": "B", "second": "A", "prefers": "tie"},
+            ],
+            "additional_reads": [],
+            "final": "tie",
+            "margin": 0.0,
+            "deterministic_status": "proceed",
+            "rejected_candidates": [],
+            "referenceSolution": "must be rejected",
+        }
+    ]
     record["canary_battery_digest"] = "canary"
     record["holdout_manifest_digest"] = "holdout"
     record["capability_boundary_snapshot"] = {
-        "proposer": ["propose"], "applier": ["apply"], "judge": ["judge"],
-        "network": "off", "hermetic": True,
+        "proposer": ["propose"],
+        "applier": ["apply"],
+        "judge": ["judge"],
+        "network": "off",
+        "hermetic": True,
     }
     record["capability_boundary_digest"] = digest(record["capability_boundary_snapshot"])
     assert any("forbidden reference material" in error for error in validate_run_record(record))

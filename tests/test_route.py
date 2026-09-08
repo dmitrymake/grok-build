@@ -86,13 +86,22 @@ def test_verifier_result_status_patterns() -> None:
     for text in ("exit: 1\nvalidation rejected", "Exit Code: 2\nPermission denied"):
         if settlement._verify_result_status({"toolResult": text}) != "failure":
             _fail(f"nonzero textual exit should fail: {text}")
-    if settlement._verify_result_status({"toolResult": {"status": "failed", "output": "x"}}) != "failure":
+    if (
+        settlement._verify_result_status({"toolResult": {"status": "failed", "output": "x"}})
+        != "failure"
+    ):
         _fail("structured failed status should fail")
     if settlement._verify_result_status({"toolResult": {"status": "passed"}}) != "success":
         _fail("structured passed status should succeed")
-    if settlement._verify_result_status({"toolResult": {"status": "failed", "exit_code": 0}}) != "failure":
+    if (
+        settlement._verify_result_status({"toolResult": {"status": "failed", "exit_code": 0}})
+        != "failure"
+    ):
         _fail("structured failed status must override zero exit code")
-    if settlement._verify_result_status({"toolResult": {"status": "passed", "exit_code": 3}}) != "success":
+    if (
+        settlement._verify_result_status({"toolResult": {"status": "passed", "exit_code": 3}})
+        != "success"
+    ):
         _fail("structured passed status must override nonzero exit code")
     if settlement._verify_result_status({"toolResult": "all good"}) != "incomplete":
         _fail("unsupported prose should remain incomplete")
@@ -726,6 +735,4 @@ if __name__ == "__main__":
     run_standalone(main)
 
 
-PYTEST_ONLY = (
-    "test_spawn_input_shapes",
-)
+PYTEST_ONLY = ("test_spawn_input_shapes",)
