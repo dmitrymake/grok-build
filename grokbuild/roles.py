@@ -353,10 +353,10 @@ _BUILTIN_ROLES_FALLBACK: dict[str, dict[str, Any]] = {
         "autonomy": "standard",
     },
     "judge-challenger-structural": {
-        "model": "gpt-oss-20b",
+        "model": "gpt-oss-120b",
         "reasoning_effort": "low",
         "capability_mode": "read-only",
-        "description": "Opt-in structural challenger for GPT-OSS-20B via Together AI.",
+        "description": "Opt-in structural challenger for GPT-OSS-120B via Together AI.",
         "autonomy": "standard",
     },
     "verifier-planner": {

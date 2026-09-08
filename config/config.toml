@@ -351,7 +351,7 @@ autonomy = "standard"
 
 [subagents.roles.judge-challenger-structural]
 description = "Opt-in structural challenger."
-model = "gpt-oss-20b"
+model = "gpt-oss-120b"
 reasoning_effort = "low"
 default_capability_mode = "read-only"
 autonomy = "standard"
@@ -390,7 +390,7 @@ model = "openai/gpt-oss-20b"
 base_url = "https://api.together.xyz/v1"
 api_backend = "chat_completions"
 name = "GPT-OSS-20B (Together AI)"
-description = "Together AI serverless open-model endpoint for the opt-in structural challenger."
+description = "Together AI serverless economy alternative; unbound by default."
 env_key = "TOGETHER_API_KEY"
 context_window = 131072
 

@@ -37,5 +37,5 @@ def test_bound_challengers_compose_from_live_registry():
     registry = load_registry()
     assert registry.get("judge-challenger-agentic").model == "gpt-oss-120b"
     assert registry.get("judge-challenger-agentic").reasoning_effort == "low"
-    assert registry.get("judge-challenger-structural").model == "gpt-oss-20b"
+    assert registry.get("judge-challenger-structural").model == "gpt-oss-120b"
     assert registry.get("judge-challenger-structural").reasoning_effort == "low"

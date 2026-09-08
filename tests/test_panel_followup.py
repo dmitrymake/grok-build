@@ -217,3 +217,6 @@ def test_disabled_challengers_never_enter_a_panel_but_opt_in_bound_roles_do():
     assert [member.role for member in stages[0].members] == [
         "judge-challenger-agentic", "judge-challenger-structural"
     ]
+    assert registry.get("judge-challenger-agentic").model == "gpt-oss-120b"
+    assert registry.get("judge-challenger-structural").model == "gpt-oss-120b"
+    assert registry.get("judge-challenger-structural").reasoning_effort == "low"

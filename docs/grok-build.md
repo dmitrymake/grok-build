@@ -27,7 +27,7 @@ The non-spawnable conductor follows `glm-5.3-flash → gemini-3.7-flash → grok
 | `implement-standard` | `gpt-5.6-luna @ max [guided]` | `guided` | all | cheap | 272 000 | codex | primary | `http://127.0.0.1:1456/v1`; configured proxy endpoint and API key |
 | `implement-strong` | `gpt-5.6-sol @ max [standard]` | `standard` | all | hard | 272 000 | codex | primary | `http://127.0.0.1:1456/v1`; configured proxy endpoint and API key |
 | `judge-challenger-agentic` | `gpt-oss-120b @ low [standard]` | `standard` | read-only | challenger | 131 072 | together | primary | `https://api.together.xyz/v1`; api_key; env TOGETHER_API_KEY |
-| `judge-challenger-structural` | `gpt-oss-20b @ low [standard]` | `standard` | read-only | challenger | 131 072 | together | primary | `https://api.together.xyz/v1`; api_key; env TOGETHER_API_KEY |
+| `judge-challenger-structural` | `gpt-oss-120b @ low [standard]` | `standard` | read-only | challenger | 131 072 | together | primary | `https://api.together.xyz/v1`; api_key; env TOGETHER_API_KEY |
 | `judge-disagreement` | `gpt-5.6-luna @ high [standard]` | `standard` | read-only | cheap | 272 000 | codex | primary | `http://127.0.0.1:1456/v1`; configured proxy endpoint and API key |
 | `judge-frontier-code` | `grok-4.6 [standard]` | `standard` | read-only | spare | session-managed | xai | primary | ``; official grok login; session; no binding |
 | `judge-frontier-general` | `gpt-5.6-sol @ xhigh [standard]` | `standard` | read-only | hard | 272 000 | codex | primary | `http://127.0.0.1:1456/v1`; configured proxy endpoint and API key |

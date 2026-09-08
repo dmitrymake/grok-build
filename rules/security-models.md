@@ -23,7 +23,7 @@ The conductor follows `glm-5.3-flash → gemini-3.7-flash → grok-4.6`, starts 
 | `implement-overflow` | `deepseek-v4-pro @ high [standard]` | `standard` | cross-provider overflow after primary tiers fail |
 | `implement-strong` | `gpt-5.6-sol @ max [standard]` | `standard` | strong middle-tier implementation within the declared scope |
 | `judge-challenger-agentic` | `gpt-oss-120b @ low [standard]` | `standard` | opt-in read-only agentic challenger via Together AI; composes only under the judge-challengers profile |
-| `judge-challenger-structural` | `gpt-oss-20b @ low [standard]` | `standard` | opt-in read-only structural challenger via Together AI; composes only under the judge-challengers profile |
+| `judge-challenger-structural` | `gpt-oss-120b @ low [standard]` | `standard` | opt-in read-only structural challenger via Together AI; composes only under the judge-challengers profile |
 | `judge-disagreement` | `gpt-5.6-luna @ high [standard]` | `standard` | adjudicates only when the two cheap judges disagree after a discriminating test |
 | `judge-frontier-code` | `grok-4.6 [standard]` | `standard` | frontier adjudication for code artifacts, bought only after cheaper comparison fails to resolve |
 | `judge-frontier-general` | `gpt-5.6-sol @ xhigh [standard]` | `standard` | frontier adjudication for non-code artifacts, bought only after cheaper comparison fails to resolve |
