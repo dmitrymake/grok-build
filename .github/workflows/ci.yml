@@ -73,6 +73,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - run: python -m pip install -e ".[test]"
       # Public CI intentionally permits an empty local blacklist; release policy is hermetic.
       - run: ./scripts/release-check.sh
         env:
