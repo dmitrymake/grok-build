@@ -69,6 +69,7 @@ def parse_providers(path: Path) -> dict[str, dict[str, Any]]:
         "quality_prior",
         "capabilities",
         "balance",
+        "supported_reasoning_efforts",
     }
     endpoint_keys = {
         "provider",
@@ -103,13 +104,20 @@ def parse_providers(path: Path) -> dict[str, dict[str, Any]]:
             if (
                 not isinstance(mspec, dict)
                 or set(mspec) - (model_keys | {"description", "endpoints"})
-                or not model_keys - {"balance"} <= set(mspec)
+                or not model_keys - {"balance", "supported_reasoning_efforts"} <= set(mspec)
                 or set(mspec.get("capabilities", {})) != capability_keys
             ):
                 fail(f"provider model {model} is invalid")
             balance = mspec.get("balance")
             if balance is not None and balance not in {"ordered", "rotate"}:
                 fail(f"provider model {model} has invalid balance")
+            efforts = mspec.get("supported_reasoning_efforts")
+            if efforts is not None and (
+                not isinstance(efforts, list)
+                or not efforts
+                or not all(isinstance(value, str) and value for value in efforts)
+            ):
+                fail(f"provider model {model} has invalid supported reasoning efforts")
             endpoints = mspec.get("endpoints")
             if endpoints is not None:
                 if not isinstance(endpoints, list) or not endpoints:

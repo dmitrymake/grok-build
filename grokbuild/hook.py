@@ -374,12 +374,22 @@ def _spawn_updated_input(
         updated_nested = dict(nested)
         if binding and binding.get("model"):
             updated_nested["model"] = str(binding["model"])
+        if binding and "reasoning_effort" in binding:
+            if binding["reasoning_effort"] is None:
+                updated_nested.pop("reasoning_effort", None)
+            else:
+                updated_nested["reasoning_effort"] = str(binding["reasoning_effort"])
         if force_capability:
             updated_nested["capability_mode"] = "all"
         updated["tool_input"] = updated_nested
     else:
         if binding and binding.get("model"):
             updated["model"] = str(binding["model"])
+        if binding and "reasoning_effort" in binding:
+            if binding["reasoning_effort"] is None:
+                updated.pop("reasoning_effort", None)
+            else:
+                updated["reasoning_effort"] = str(binding["reasoning_effort"])
         if force_capability:
             updated["capability_mode"] = "all"
     return updated
@@ -401,10 +411,25 @@ def _fresh_spawn_binding(
     )
     persist_endpoint_resolution(record)
     telemetry = record.to_dict()
-    binding = event.get("executable_binding")
-    if not isinstance(binding, Mapping) or binding.get("model") == event.get("model"):
+    raw_binding = event.get("executable_binding")
+    target_model = (
+        str(raw_binding.get("model"))
+        if isinstance(raw_binding, Mapping) and raw_binding.get("model")
+        else str(event.get("model") or "")
+    )
+    requested_role = registry.get(requested)
+    pinned_effort = requested_role.reasoning_effort if requested_role else None
+    effort = roles.sanitize_reasoning_effort(
+        target_model, pinned_effort, registry.provider_catalog
+    )
+    if not isinstance(raw_binding, Mapping):
+        return ({"reasoning_effort": effort} if effort != pinned_effort else None), telemetry
+    updated_binding = dict(raw_binding)
+    if effort != pinned_effort:
+        updated_binding["reasoning_effort"] = effort
+    if updated_binding.get("model") == event.get("model") and effort == pinned_effort:
         return None, telemetry
-    return binding, telemetry
+    return updated_binding, telemetry
 
 
 def _finish_pre_tool(

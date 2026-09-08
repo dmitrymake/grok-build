@@ -573,6 +573,7 @@ class ProviderModelMeta:
     endpoints: tuple[ProviderEndpointMeta, ...] = ()
     explicit_endpoints: bool = False
     balance: str = "ordered"
+    supported_reasoning_efforts: frozenset[str] | None = None
 
 
 def load_provider_catalog(path: Path | str | None = None) -> dict[str, ProviderModelMeta]:
@@ -644,6 +645,12 @@ def load_provider_catalog(path: Path | str | None = None) -> dict[str, ProviderM
                 provider=primary.provider,
                 provider_label=primary.provider_label,
                 family=str(mspec.get("family") or mid),
+                supported_reasoning_efforts=(
+                    frozenset(str(value) for value in mspec["supported_reasoning_efforts"])
+                    if isinstance(mspec.get("supported_reasoning_efforts"), list)
+                    and all(isinstance(value, str) for value in mspec["supported_reasoning_efforts"])
+                    else None
+                ),
                 subscription_class=primary.subscription_class,
                 tier=str(mspec.get("tier")) if mspec.get("tier") is not None else None,
                 cost=_opt_float("cost"),
@@ -1018,6 +1025,30 @@ def resolve_config_path(config_path: Path | str | None = None) -> Path | None:
     return None
 
 
+_EFFORT_ORDER = ("none", "minimal", "low", "medium", "high", "xhigh", "max")
+
+
+def sanitize_reasoning_effort(
+    model: str | None,
+    effort: str | None,
+    provider_catalog: Mapping[str, ProviderModelMeta] | None = None,
+) -> str | None:
+    """Clamp a pinned effort to the target model's known lower supported level."""
+    if effort is None or not model:
+        return effort
+    catalog = load_provider_catalog() if provider_catalog is None else provider_catalog
+    meta = catalog.get(model) or catalog.get(model.split("@", 1)[0])
+    supported = meta.supported_reasoning_efforts if meta else None
+    if not supported or effort in supported:
+        return effort
+    try:
+        index = _EFFORT_ORDER.index(effort)
+    except ValueError:
+        return effort
+    lower = [value for value in _EFFORT_ORDER[:index] if value in supported]
+    return lower[-1] if lower else None
+
+
 def _role_from(
     name: str,
     model: str | None,
@@ -1107,7 +1138,7 @@ def _role_from(
     return Role(
         name=name,
         model=str(model) if model else None,
-        reasoning_effort=effort,
+        reasoning_effort=sanitize_reasoning_effort(model, effort, {str(model): provider_meta} if provider_meta else None),
         autonomy=str(autonomy),
         capability_mode=capability_mode,
         description=description,
@@ -1223,7 +1254,7 @@ def _agent_role(
     return Role(
         name=name,
         model=model,
-        reasoning_effort=effort,
+        reasoning_effort=sanitize_reasoning_effort(model, effort, provider_catalog),
         autonomy=str(meta.get("autonomy") or "standard"),
         capability_mode=capability,
         description=str(meta.get("description") or ""),
@@ -1303,7 +1334,11 @@ def load_registry(config_path: Path | str | None = None) -> RoleRegistry:
                     roles[name] = Role(
                         name=str(name),
                         model=str(model) if model else None,
-                        reasoning_effort=roles[name].reasoning_effort,
+                        reasoning_effort=sanitize_reasoning_effort(
+                            str(model) if model else None,
+                            roles[name].reasoning_effort,
+                            provider_catalog,
+                        ),
                         autonomy=roles[name].autonomy,
                         capability_mode=roles[name].capability_mode,
                         description=roles[name].description,

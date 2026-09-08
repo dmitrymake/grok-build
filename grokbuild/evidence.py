@@ -13,6 +13,13 @@ from grokbuild.persist import append_jsonl, sidecar_path
 FailureCause = Literal["auth", "environment", "model", "unknown"]
 EVIDENCE_SCHEMA = "evidence-v1"
 _MAX_DETAIL = 500
+_INVALID_REASONING_EFFORT_RE = re.compile(
+    r"(?:invalid[- ]argument|400)[^\n|]{0,160}reasoning[_ -]?effort|"
+    r"reasoning[_ -]?effort[^\n|]{0,160}(?:invalid|unsupported|400)",
+    re.IGNORECASE,
+)
+
+
 _QUOTA_FAILURE_RE = re.compile(
     r"(?:\b(?:http|status(?:\s+code)?|response\s+code)\s*[:=]?\s*429\b|"
     r"\btoo many requests\b|"
@@ -61,11 +68,28 @@ def is_quota_failure(value: str) -> bool:
     return bool(_QUOTA_FAILURE_RE.search(value))
 
 
+def is_invalid_reasoning_effort_failure(signal: FailureSignal) -> bool:
+    """Identify a 400 that can be retried once with the model default effort."""
+    value = " ".join(
+        (signal.text, signal.reason, str(signal.status or ""), signal.provider)
+    )
+    return bool(_INVALID_REASONING_EFFORT_RE.search(value)) and (
+        signal.status in (None, 400) or str(signal.status or "").strip() == "400"
+    )
+
+
+def retry_without_reasoning_effort(signal: FailureSignal, *, already_retried: bool = False) -> bool:
+    """Return whether this failure gets the single default-effort retry."""
+    return is_invalid_reasoning_effort_failure(signal) and not already_retried
+
+
 def classify_failure(signal: FailureSignal) -> FailureCause:
     """Classify a failure conservatively; unknown remains on the model path."""
     value = " ".join(
         (signal.text, signal.reason, str(signal.status or ""), signal.provider)
     ).casefold()
+    if is_invalid_reasoning_effort_failure(signal):
+        return "model"
     if re.search(r"(?:\b401\b|\b403\b|credential|authentication|unauthori[sz]ed|forbidden)", value):
         return "auth"
     if re.search(
@@ -122,6 +146,8 @@ __all__ = [
     "classify_failure",
     "evidence_path",
     "is_quota_failure",
+    "is_invalid_reasoning_effort_failure",
+    "retry_without_reasoning_effort",
     "make_evidence",
     "persist_evidence",
 ]
