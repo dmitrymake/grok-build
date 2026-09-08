@@ -15,9 +15,10 @@ EVIDENCE_SCHEMA = "evidence-v1"
 _MAX_DETAIL = 500
 _QUOTA_FAILURE_RE = re.compile(
     r"(?:\b429\b|\btoo many requests\b|"
-    r"\brate[-_ ]limit(?: has| is)? (?:reached|exceeded)\b|"
+    r"\brate[-_ ]limit(?: has| is)?(?: been)? (?:reached|exceeded)\b|"
     r"\b(?:api|session|provider|upstream)[-_ ]error[^\n|]{0,80}\brate[-_ ]limited\b|"
     r"\b(?:quota|(?:monthly )?usage limit)[^\n|]{0,40}(?:exhausted|exceeded|reached)\b|"
+    r"\b(?:exceeded|exhausted|reached)[^\n|]{0,40}\b(?:quota|usage limit|rate[-_ ]limit)\b|"
     r"\binsufficient quota\b)",
     re.IGNORECASE,
 )

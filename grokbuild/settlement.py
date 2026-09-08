@@ -379,6 +379,23 @@ def _evidence_policy(route: dict) -> str | None:
     return getattr(profile, "evidence_policy", None) if profile is not None else None
 
 
+def _persisted_evidence_policy(decision_id: str) -> str | None:
+    """Return the evidence policy recorded with a bound decision."""
+    try:
+        history = list(load_state(default_state_path()).history)
+        record = next(
+            (
+                item
+                for item in reversed(history)
+                if str(item.get("decision_id") or "") == decision_id
+            ),
+            None,
+        )
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+    return _evidence_policy(record) if isinstance(record, dict) else None
+
+
 def _observed_changed_paths(root: str | None) -> tuple[str, ...]:
     """Return the worktree paths the runtime itself sees as changed.
 
@@ -429,7 +446,7 @@ def _evidence_seam(
     strict policy the runtime verifies the typed result against the spec that
     was attached before the spawn, and only a verified result completes a stage.
     """
-    policy = _evidence_policy(route)
+    current_policy = _evidence_policy(route)
     binding = (
         resolved_binding
         or resolve_task_binding(default_state_path(), session_id, decision_id, task_id)
@@ -437,6 +454,15 @@ def _evidence_seam(
     if binding is None:
         return legacy_success
     bound_decision, stage_key = binding
+    bound_policy = _persisted_evidence_policy(bound_decision)
+    policy = (
+        "strict"
+        if "strict" in {
+            str(current_policy or "").strip().casefold(),
+            str(bound_policy or "").strip().casefold(),
+        }
+        else current_policy or bound_policy
+    )
     spec = find_task_spec(bound_decision, stage_key)
     result = parse_task_result(text)
     observation = Observation()

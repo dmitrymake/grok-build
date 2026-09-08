@@ -11,6 +11,7 @@ from grokbuild.evidence import (
     FailureSignal,
     classify_failure,
     evidence_path,
+    is_quota_failure,
     persist_evidence,
 )
 from grokbuild.features import extract_features
@@ -39,6 +40,25 @@ REPO_CONFIG = Path(__file__).resolve().parents[1] / "config" / "config.toml"
 )
 def test_failure_cause_classes(signal: FailureSignal, expected: str) -> None:
     assert classify_failure(signal) == expected
+
+
+@pytest.mark.parametrize(
+    "message",
+    (
+        "You exceeded your current quota, please check your plan and billing details.",
+        "Number of requests has exceeded your per-minute rate limit.",
+        "The API rate limit has been reached for this organization.",
+    ),
+)
+def test_real_provider_quota_phrasings_are_detected(message: str) -> None:
+    assert is_quota_failure(message)
+    assert classify_failure(FailureSignal(text=message)) == "model"
+
+
+def test_quota_diagnostic_prose_is_not_a_provider_signal() -> None:
+    message = "BLOCKED: the rate-limit validation in the reviewed implementation is incorrect"
+    assert not is_quota_failure(message)
+    assert classify_failure(FailureSignal(text=message)) == "unknown"
 
 
 def test_unknown_is_conservative_default() -> None:
