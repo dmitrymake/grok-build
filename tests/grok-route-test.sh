@@ -38,7 +38,7 @@ python3 tests/test_workloads.py
 python3 tests/test_corpus_sync.py
 python3 tests/test_verify_debt_repro.py
 # Pytest-only modules run in the CI test job, which owns the pytest dependency.
-PYTHONPATH=. python3 tests/test_hook_hardening_followup.py
+# Pytest-only follow-ups run in the CI test job, which owns the pytest dependency.
 PYTHONPATH=. python3 tests/test_panel_followup.py
 PYTHONPATH=. python3 tests/test_provider_hygiene_followup.py
 PYTHONPATH=. python3 tests/test_security_regressions_followup.py
