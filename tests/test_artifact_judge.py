@@ -303,7 +303,7 @@ def test_an_abstention_is_never_a_guess() -> None:
         CONTRACT,
         _candidate("A"),
         _candidate("B"),
-        (JudgeOpinion("A", "B", "A", 0.9), JudgeOpinion("B", "A", "", 0.0)),
+        (JudgeOpinion("A", "B", "A", 0.9), JudgeOpinion("B", "A", "abstain", 0.0)),
         IDENTITY_TERMS,
     )
     check(
@@ -331,6 +331,21 @@ def test_an_empty_bundle_is_unjudgeable() -> None:
     )
     check(verdict.verdict == "unjudgeable", f"nothing to compare ({verdict.verdict})")
     check("bundle_incomplete" in verdict.reason_codes, "the reason is the empty bundle")
+
+
+def test_duplicate_or_empty_candidate_labels_never_reach_deterministic_gating() -> None:
+    failing = _candidate("same", hard_results={"tests_pass": False, "scope_respected": True})
+    passing = _candidate("same")
+    verdict = compare(CONTRACT, failing, passing)
+    check(verdict.verdict == "unjudgeable", f"duplicate labels cannot select a winner ({verdict})")
+    check(verdict.deterministic_status == "validation_error", f"validation is explicit ({verdict})")
+    for selection in (
+        select(CONTRACT, (failing, passing)),
+        select_v2(CONTRACT, (failing, passing), _preference("same")),
+    ):
+        check(not selection.decided, f"duplicate labels leave selection inconclusive ({selection})")
+    empty = compare(CONTRACT, _candidate(""), _candidate("B"))
+    check(empty.verdict == "unjudgeable", f"empty labels are rejected ({empty})")
 
 
 IMPURE_IMPORTS = frozenset(
@@ -378,7 +393,7 @@ def test_the_judge_module_cannot_act() -> None:
     check(not calls & IMPURE_NAMES, "selector clustering and selection cannot act")
 
 
-def test_artifact_clustering_normalizes_diffs_and_verifier_outcomes() -> None:
+def test_artifact_clustering_uses_exact_diffs_and_verifier_outcomes() -> None:
     first = _candidate(
         "B",
         artifacts={
@@ -409,14 +424,28 @@ def test_artifact_clustering_normalizes_diffs_and_verifier_outcomes() -> None:
     )
     partitions = {(cluster.members, cluster.support) for cluster in clusters}
     check(
-        partitions == {(("A", "B"), 2), (("C",), 1), (("D",), 1)},
-        f"positions and declared hard outcomes define the partition ({clusters})",
+        partitions == {(("A",), 1), (("B",), 1), (("C",), 1), (("D",), 1)},
+        f"exact bytes and declared hard outcomes define the partition ({clusters})",
     )
     check(
         clusters
         == cluster_artifacts((different_position, equivalent, first, different_outcome), CONTRACT),
         "input order does not affect clustering",
     )
+
+
+def test_string_literal_whitespace_differences_do_not_cluster() -> None:
+    first = _candidate("A", artifacts={"app.py": 'value = "a  b"\n'})
+    second = _candidate("B", artifacts={"app.py": 'value = "a b"\n'})
+    clusters = cluster_artifacts((first, second), CONTRACT)
+    check({cluster.members for cluster in clusters} == {("A",), ("B",)}, f"literal bytes differ ({clusters})")
+
+
+def test_diff_target_file_identity_is_part_of_equivalence() -> None:
+    first = _candidate("A", artifacts={"change.diff": "--- a/one.py\n+++ b/one.py\n@@ -1 +1 @@\n-old\n+new\n"})
+    second = _candidate("B", artifacts={"change.diff": "--- a/two.py\n+++ b/two.py\n@@ -1 +1 @@\n-old\n+new\n"})
+    clusters = cluster_artifacts((first, second), CONTRACT)
+    check({cluster.members for cluster in clusters} == {("A",), ("B",)}, f"diff targets differ ({clusters})")
 
 
 def test_diff_clustering_preserves_change_positions() -> None:
@@ -466,7 +495,7 @@ def test_whole_file_fake_hunk_header_cannot_enable_diff_normalization() -> None:
     )
 
 
-def test_whole_file_normalization_preserves_line_structure() -> None:
+def test_whole_file_equivalence_preserves_exact_bytes() -> None:
     spaced = _candidate(
         "A",
         artifacts={"src/parser.py": "if   ready:\n        return   value\n"},
@@ -481,8 +510,8 @@ def test_whole_file_normalization_preserves_line_structure() -> None:
     )
     clusters = cluster_artifacts((spaced, equivalent, restructured))
     check(
-        {cluster.members for cluster in clusters} == {("A", "B"), ("C",)},
-        f"in-line whitespace normalizes without erasing line boundaries ({clusters})",
+        {cluster.members for cluster in clusters} == {("A",), ("B",), ("C",)},
+        f"whitespace differences remain distinct until normalization is language-aware ({clusters})",
     )
 
 

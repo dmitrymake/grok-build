@@ -6,7 +6,14 @@ import pytest
 
 from grokbuild import gate, settlement
 from grokbuild.decision import ExecutionStage
+from grokbuild.evidence import FailureSignal
 from grokbuild.state import ExecutionTrack, RuntimeState, load_state
+
+
+def test_plain_rate_limit_message_is_a_quota_signal() -> None:
+    assert settlement._quota_signal(
+        FailureSignal(text="Retry failed: Rate limit reached for requests")
+    )
 
 
 def _state(tmp_path, stages=()):

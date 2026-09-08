@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+import json
 from pathlib import Path
 from typing import Any, Iterator, Mapping, Sequence
 
@@ -40,6 +41,7 @@ ATTRIBUTION_SCHEMA = "attribution-v1"
 
 MAX_ITEMS = 32
 MAX_TEXT = 200
+MAX_COMPARISON_AGGREGATE_BYTES = 16_384
 
 # Keys that would tie a record to a vendor rather than to the work. They are
 # refused at construction, not filtered later, so a caller cannot smuggle one in
@@ -161,6 +163,16 @@ class JudgeCalibrationRecord:
     schema: str = JUDGE_CALIBRATION_SCHEMA
 
     def to_dict(self) -> dict[str, Any]:
+        aggregate = dict(self.comparison_aggregate) if self.comparison_aggregate is not None else None
+        if aggregate is not None:
+            try:
+                aggregate_size = len(
+                    json.dumps(aggregate, sort_keys=True, separators=(",", ":")).encode("utf-8")
+                )
+            except (TypeError, ValueError) as exc:
+                raise ValueError("comparison_aggregate must be JSON serializable") from exc
+            if aggregate_size > MAX_COMPARISON_AGGREGATE_BYTES:
+                raise ValueError("comparison_aggregate exceeds the serialized size limit")
         payload = {
             "schema": self.schema,
             "contract_version": self.contract_version,
@@ -172,9 +184,7 @@ class JudgeCalibrationRecord:
             "accepted": _text(self.accepted, 48),
             "later_regression": self.later_regression,
             "human_correction": _text(self.human_correction),
-            "comparison_aggregate": (
-                dict(self.comparison_aggregate) if self.comparison_aggregate is not None else None
-            ),
+            "comparison_aggregate": aggregate,
             "health_id": _text(self.health_id, 128),
             "observed_at": self.observed_at or datetime.now(UTC).isoformat(),
         }

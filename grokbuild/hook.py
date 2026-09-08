@@ -244,7 +244,10 @@ def resolve_route(
     turns are still filtered by ``_is_real_user`` before we get here.
     """
     static_mode = (os.environ.get("GROK_ROUTE_MODE") or "").strip().casefold() == "static"
-    transcript_raw = last_user_prompt_raw(session_id)
+    # Transcript text has already crossed the host provenance boundary: use the
+    # harness-stripped user view so appended reminders cannot score. The submit
+    # payload remains the user-authored view and retains fake-tag resilience.
+    transcript_raw = last_user_prompt(session_id)
     hook_raw = hook_prompt or ""
     # Submit often fires before chat_history has this turn; later events
     # prefer the transcript so a mute UserPromptSubmit still classifies.
@@ -586,9 +589,8 @@ def handle_pre_tool(data: dict, spec: dict) -> None:
             return
         track = _load_execution(decision_id)
         lifted, lifted_detail = _enforceable_gate(decision_id, route)
-        if lifted and lifted_detail.startswith("barrier_stall"):
-            finish("allow", "gate_lifted", lifted_detail, warnings=route.get("warnings", []))
-            return
+        # A stalled barrier is warning telemetry, not a bypass: continue through
+        # normal member, binding, capability, and request bookkeeping validation.
         next_stage = _next_required_spawn_stage(track) if track else None
         if next_stage is None:
             lifted, detail = _enforceable_gate(decision_id, route)

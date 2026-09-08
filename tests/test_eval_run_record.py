@@ -94,6 +94,36 @@ def valid():
     return record
 
 
+def valid_v3():
+    record = valid()
+    record["schema_version"] = 3
+    record["judge_health_snapshot"] = [{
+        "health_id": "h1", "provider": "p", "endpoint": "e",
+        "requested_model": "m", "resolved_model": "snapshot", "prompt_hash": "hash",
+        "rubric_version": "v1", "temperature": 0.0, "reasoning_effort": "high",
+        "response_schema": "judge-opinion-v2", "canary_battery_version": "v1",
+        "repeatability": 0.9, "position_bias": 0.1,
+    }]
+    record["judge_health_snapshot_digest"] = digest(record["judge_health_snapshot"])
+    record["comparison_aggregates"] = [{
+        "comparison_id": "c1", "candidate_a": "A", "candidate_b": "B",
+        "base_reads": [
+            {"first": "A", "second": "B", "prefers": "A"},
+            {"first": "B", "second": "A", "prefers": "A"},
+        ],
+        "additional_reads": [], "final": "A", "margin": 1.0,
+        "deterministic_status": "proceed", "rejected_candidates": [],
+    }]
+    record["canary_battery_digest"] = "canary"
+    record["holdout_manifest_digest"] = "holdout"
+    record["capability_boundary_snapshot"] = {
+        "proposer": ["propose"], "applier": ["apply"], "judge": ["judge"],
+        "grader": ["grade"], "network": "off", "hermetic": True,
+    }
+    record["capability_boundary_digest"] = digest(record["capability_boundary_snapshot"])
+    return record
+
+
 def test_valid_record_passes():
     assert is_valid_run_record(valid())
 
@@ -128,6 +158,64 @@ def test_v3_judge_snapshots_validate_digests_aggregate_and_boundaries():
     assert is_valid_run_record(record)
     record["comparison_aggregates"][0]["rejected_candidates"] = ["A"]
     assert any("reject dominance" in error for error in validate_run_record(record))
+
+
+def test_v3_winner_must_follow_reads_and_proceeding_gate_evidence():
+    contradictory = valid_v3()
+    contradictory["comparison_aggregates"][0]["final"] = "B"
+    assert any("unsupported by its reads" in error for error in validate_run_record(contradictory))
+    missing_gate = valid_v3()
+    del missing_gate["comparison_aggregates"][0]["deterministic_status"]
+    assert any("lacks proceeding gate evidence" in error for error in validate_run_record(missing_gate))
+    abstained = valid_v3()
+    abstained["comparison_aggregates"][0]["base_reads"][0]["prefers"] = "abstain"
+    assert any("unsupported by its reads" in error for error in validate_run_record(abstained))
+
+
+def test_v3_validates_candidate_identities_and_every_reread():
+    record = valid_v3()
+    aggregate = record["comparison_aggregates"][0]
+    aggregate["additional_reads"] = [
+        {"first": "A", "second": "C", "prefers": "A", "invocation_id": "same"},
+        {"first": "A", "second": "B", "prefers": "invalid", "invocation_id": "same"},
+    ]
+    errors = validate_run_record(record)
+    assert any("invalid pair order" in error for error in errors)
+    assert any("invalid preference" in error for error in errors)
+    assert any("repeats an invocation_id" in error for error in errors)
+    aggregate["candidate_a"] = "outside-portfolio"
+    assert any("invalid candidate identities" in error for error in validate_run_record(record))
+
+
+def test_v3_read_confidence_must_be_within_probability_range():
+    for confidence in (-0.01, 1.01):
+        record = valid_v3()
+        record["comparison_aggregates"][0]["base_reads"][0]["confidence"] = confidence
+        assert any("invalid confidence" in error for error in validate_run_record(record))
+        try:
+            jsonschema.validate(record, schema())
+        except jsonschema.ValidationError:
+            pass
+        else:
+            raise AssertionError(f"schema accepted out-of-range confidence: {confidence}")
+
+
+def test_v3_malformed_aggregate_containers_return_errors_instead_of_crashing():
+    for field, malformed in (("base_reads", {}), ("additional_reads", "bad"), ("rejected_candidates", {})):
+        record = valid_v3()
+        record["comparison_aggregates"][0][field] = malformed
+        assert validate_run_record(record)
+
+
+def test_v3_grader_capabilities_must_be_explicit_and_disjoint():
+    missing = valid_v3()
+    del missing["capability_boundary_snapshot"]["grader"]
+    missing["capability_boundary_digest"] = digest(missing["capability_boundary_snapshot"])
+    assert any("grader must be a string list" in error for error in validate_run_record(missing))
+    overlap = valid_v3()
+    overlap["capability_boundary_snapshot"]["grader"] = ["judge"]
+    overlap["capability_boundary_digest"] = digest(overlap["capability_boundary_snapshot"])
+    assert any("judge/grader" in error for error in validate_run_record(overlap))
 
 
 def test_forbidden_material_key_normalization_catches_camel_case() -> None:
@@ -361,6 +449,11 @@ PYTEST_ONLY = (
     "test_forbidden_material_key_normalization_catches_camel_case",
     "test_valid_record_passes",
     "test_v3_judge_snapshots_validate_digests_aggregate_and_boundaries",
+    "test_v3_winner_must_follow_reads_and_proceeding_gate_evidence",
+    "test_v3_validates_candidate_identities_and_every_reread",
+    "test_v3_malformed_aggregate_containers_return_errors_instead_of_crashing",
+    "test_v3_read_confidence_must_be_within_probability_range",
+    "test_v3_grader_capabilities_must_be_explicit_and_disjoint",
     "test_schema_lists_every_required_control_and_metric",
     "test_complete_record_passes_json_schema",
     "test_same_wrong_type_cases_rejected_by_schema_and_public_path",

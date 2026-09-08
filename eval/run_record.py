@@ -163,7 +163,7 @@ def _validate_cross_fields(record: Any) -> list[str]:
             if boundary.get("network") != "off" or boundary.get("hermetic") is not True:
                 errors.append("capability boundary must be hermetic with network off")
             actor_sets = []
-            for actor in ("proposer", "applier", "judge"):
+            for actor in ("proposer", "applier", "judge", "grader"):
                 values = boundary.get(actor)
                 if not isinstance(values, list) or not all(isinstance(item, str) for item in values):
                     errors.append(f"capability boundary {actor} must be a string list")
@@ -181,21 +181,104 @@ def _validate_cross_fields(record: Any) -> list[str]:
                 if not isinstance(aggregate, Mapping):
                     errors.append(f"comparison_aggregates[{index}] must be an object")
                     continue
+                prefix = f"comparison_aggregates[{index}]"
                 a, b = aggregate.get("candidate_a"), aggregate.get("candidate_b")
+                portfolio = record.get("candidate_portfolio")
+                identities_valid = (
+                    isinstance(a, str)
+                    and bool(a)
+                    and isinstance(b, str)
+                    and bool(b)
+                    and a != b
+                    and isinstance(portfolio, list)
+                    and a in portfolio
+                    and b in portfolio
+                )
+                if not identities_valid:
+                    errors.append(f"{prefix} has invalid candidate identities")
                 base = aggregate.get("base_reads")
-                orders = {
-                    (item.get("first"), item.get("second"))
-                    for item in base or ()
-                    if isinstance(item, Mapping)
-                }
-                if not isinstance(base, list) or len(base) != 2 or orders != {(a, b), (b, a)}:
-                    errors.append(f"comparison_aggregates[{index}] requires complete AB+BA reads")
-                rejected = aggregate.get("rejected_candidates") or []
+                additional = aggregate.get("additional_reads")
+                if not isinstance(base, list):
+                    errors.append(f"{prefix} base_reads must be a list")
+                    base = []
+                if not isinstance(additional, list):
+                    errors.append(f"{prefix} additional_reads must be a list")
+                    additional = []
+                reads_valid = identities_valid and len(base) == 2
+                valid_pairs = ((a, b), (b, a)) if identities_valid else ()
+                orders: set[tuple[str, str]] = set()
+                votes: list[str] = []
+                invocation_ids: list[str] = []
+                for read_index, item in enumerate((*base, *additional)):
+                    if not isinstance(item, Mapping):
+                        errors.append(f"{prefix} read[{read_index}] must be an object")
+                        reads_valid = False
+                        continue
+                    first, second, preference = (
+                        item.get("first"),
+                        item.get("second"),
+                        item.get("prefers"),
+                    )
+                    if (first, second) not in valid_pairs:
+                        errors.append(f"{prefix} read[{read_index}] has an invalid pair order")
+                        reads_valid = False
+                    elif read_index < len(base):
+                        orders.add((first, second))
+                    if preference not in (a, b, "abstain"):
+                        errors.append(f"{prefix} read[{read_index}] has an invalid preference")
+                        reads_valid = False
+                    elif preference != "abstain":
+                        votes.append(preference)
+                    confidence = item.get("confidence")
+                    if confidence is not None and (
+                        not _number(confidence) or not 0.0 <= float(confidence) <= 1.0
+                    ):
+                        errors.append(f"{prefix} read[{read_index}] has invalid confidence")
+                        reads_valid = False
+                    invocation_id = item.get("invocation_id")
+                    if read_index >= len(base) and (
+                        not isinstance(invocation_id, str) or not invocation_id
+                    ):
+                        errors.append(f"{prefix} reread[{read_index - len(base)}] lacks invocation_id")
+                        reads_valid = False
+                    if isinstance(invocation_id, str) and invocation_id:
+                        invocation_ids.append(invocation_id)
+                if identities_valid and orders != set(valid_pairs):
+                    errors.append(f"{prefix} requires complete AB+BA reads")
+                    reads_valid = False
+                if len(invocation_ids) != len(set(invocation_ids)):
+                    errors.append(f"{prefix} repeats an invocation_id")
+                    reads_valid = False
+                rejected = aggregate.get("rejected_candidates")
+                if not isinstance(rejected, list) or not all(
+                    isinstance(item, str) and identities_valid and item in (a, b)
+                    for item in rejected
+                ):
+                    errors.append(f"{prefix} rejected_candidates must contain candidate identities")
+                    rejected = []
                 final = aggregate.get("final")
-                if rejected and final in {"A", "B"}:
+                if final in {"A", "B"}:
                     selected = a if final == "A" else b
+                    deterministic_status = aggregate.get("deterministic_status")
+                    if deterministic_status != "proceed":
+                        errors.append(f"{prefix} winning result lacks proceeding gate evidence")
                     if selected in rejected:
-                        errors.append(f"comparison_aggregates[{index}] violates deterministic reject dominance")
+                        errors.append(f"{prefix} violates deterministic reject dominance")
+                    base_preferences = [
+                        item.get("prefers") for item in base if isinstance(item, Mapping)
+                    ]
+                    count_a, count_b = votes.count(a), votes.count(b)
+                    expected_final = "A" if count_a > count_b else "B" if count_b > count_a else "ABSTAIN"
+                    expected_margin = abs(count_a - count_b) / len(votes) if votes else 0.0
+                    declared_margin = aggregate.get("margin")
+                    if (
+                        not reads_valid
+                        or "abstain" in base_preferences
+                        or final != expected_final
+                        or not _number(declared_margin)
+                        or not math.isclose(float(declared_margin), expected_margin)
+                    ):
+                        errors.append(f"{prefix} winning result is unsupported by its reads")
                 def contains_forbidden(value: Any) -> bool:
                     if isinstance(value, Mapping):
                         return any(

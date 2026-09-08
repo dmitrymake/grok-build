@@ -11,7 +11,7 @@ from pathlib import Path
 import grokbuild.roles as roles
 from grokbuild.availability import _endpoint_cache, _role_availability
 from grokbuild.endpoint_resolution import latest_resolution_for_decision
-from grokbuild.evidence import FailureSignal, classify_failure
+from grokbuild.evidence import FailureSignal, classify_failure, is_quota_failure
 from grokbuild.payloads import (
     classify_result_text,
     says_subagent,
@@ -420,6 +420,7 @@ def _evidence_seam(
     task_id: str,
     legacy_success: bool,
     text: str | None,
+    resolved_binding: tuple[str, str] | None = None,
 ) -> bool:
     """Record typed evidence for one retrieval and return the completion decision.
 
@@ -429,7 +430,10 @@ def _evidence_seam(
     was attached before the spawn, and only a verified result completes a stage.
     """
     policy = _evidence_policy(route)
-    binding = resolve_task_binding(default_state_path(), session_id, decision_id, task_id)
+    binding = (
+        resolved_binding
+        or resolve_task_binding(default_state_path(), session_id, decision_id, task_id)
+    )
     if binding is None:
         return legacy_success
     bound_decision, stage_key = binding
@@ -519,12 +523,9 @@ def _quota_reset_deadline(role_name: str, provider: str, now: float) -> float | 
     return min(deadlines) if deadlines else None
 
 
-_QUOTA_MARKERS = re.compile(r"(?:\b429\b|\bquota\b)", re.IGNORECASE)
-
-
 def _quota_signal(signal: FailureSignal) -> bool:
     """True when a failure signal is a model-class quota/429 rejection."""
-    return classify_failure(signal) == "model" and bool(_QUOTA_MARKERS.search(signal.detail()))
+    return classify_failure(signal) == "model" and is_quota_failure(signal.detail())
 
 
 def _failed_endpoint_provider(
@@ -808,6 +809,20 @@ def handle_post_tool(data: dict, spec: dict) -> None:
     if mode != "static" and tool in SPAWN_TOOLS and decision_id:
         role = _canonical_role(_spawn_subagent_type(data))
         status = spawn_result_status(data)
+        result_text = retrieval_result_text(data, _retrieval_transcript_text)
+
+        def settled_success(task_id: str, binding: tuple[str, str] | None = None) -> bool:
+            return _evidence_seam(
+                data=data,
+                route=route,
+                session_id=session_id,
+                decision_id=decision_id,
+                task_id=task_id,
+                legacy_success=(status == "success"),
+                text=result_text,
+                resolved_binding=binding,
+            )
+
         if role and status == "failure":
             quota_circuit = _maybe_open_quota_circuit(data, route, role, cooldown)
             track = _load_execution(decision_id)
@@ -852,7 +867,7 @@ def handle_post_tool(data: dict, spec: dict) -> None:
                         session_id,
                         decision_id,
                         task_id,
-                        success=(status == "success"),
+                        success=settled_success(task_id),
                         threshold=threshold,
                         cooldown=cooldown,
                         consilium_after_failures=consilium_after_failures,
@@ -860,12 +875,17 @@ def handle_post_tool(data: dict, spec: dict) -> None:
                     )
                     recorded = True
                     break
+                resolved_binding = resolve_task_binding(
+                    default_state_path(), session_id, decision_id, task_id
+                )
+                if resolved_binding is None:
+                    continue
                 outcome = record_retrieval_result_tx(
                     default_state_path(),
                     session_id,
                     decision_id,
                     task_id,
-                    success=(status == "success"),
+                    success=settled_success(task_id, resolved_binding),
                     threshold=threshold,
                     cooldown=cooldown,
                     consilium_after_failures=consilium_after_failures,
@@ -892,7 +912,7 @@ def handle_post_tool(data: dict, spec: dict) -> None:
                         session_id,
                         decision_id,
                         ids[0],
-                        success=(status == "success"),
+                        success=settled_success(ids[0]),
                         threshold=threshold,
                         cooldown=cooldown,
                         consilium_after_failures=consilium_after_failures,
@@ -907,7 +927,7 @@ def handle_post_tool(data: dict, spec: dict) -> None:
                         decision_id,
                         "result",
                         role=key,
-                        success=(status == "success"),
+                        success=settled_success("", (decision_id, key)),
                         threshold=threshold,
                         cooldown=cooldown,
                         consilium_after_failures=consilium_after_failures,
@@ -920,7 +940,7 @@ def handle_post_tool(data: dict, spec: dict) -> None:
                         session_id,
                         decision_id,
                         role,
-                        success=(status == "success"),
+                        success=settled_success("", (decision_id, role)),
                         window_seconds=debt_window,
                         threshold=threshold,
                         cooldown=cooldown,

@@ -333,6 +333,25 @@ def test_foreground_429_result_fails_the_stage_and_opens_the_circuit(incident) -
     assert records[-1]["quota_circuit"]["provider"] == "opencode"
 
 
+def test_child_diagnostic_about_rate_limit_validation_does_not_open_circuit(incident) -> None:
+    _grok_home, route, records = incident
+    hook.handle_post_tool(
+        {
+            "sessionId": PARENT,
+            "toolName": "spawn_subagent",
+            "toolInput": {"subagent_type": "review-hard", "prompt": "Review quota handling."},
+            "toolResult": {
+                "status": "failed",
+                "error": "BLOCKED: the rate-limit validation in the reviewed implementation is incorrect",
+            },
+        },
+        {},
+    )
+    assert load_state(hook.default_state_path()).provider_availability == {}
+    assert route["_runtime_state"].provider_availability == {}
+    assert "quota_circuit" not in records[-1]
+
+
 def test_retrieval_sections_and_roles_are_parsed() -> None:
     sections = payloads.retrieval_task_sections(INCIDENT_TEXT)
     assert set(sections) == {ANALYST, CHALLENGER}

@@ -97,13 +97,13 @@ def test_indentation_levels_separate_clusters() -> None:
     assert {cluster.members for cluster in clusters} == {("attacker-1", "attacker-2"), ("honest",)}
 
 
-def test_consistent_reindentation_still_clusters_together() -> None:
+def test_consistent_reindentation_remains_byte_distinct() -> None:
     two_space = "for x in xs:\n  if x:\n    y()\n  z()\n"
     tabs = "for x in xs:\n\tif x:\n\t\ty()\n\tz()\n"
     clusters = cluster_artifacts(
         (_candidate("a", OUTSIDE_IF), _candidate("b", two_space), _candidate("c", tabs))
     )
-    assert [cluster.members for cluster in clusters] == [("a", "b", "c")]
+    assert {cluster.members for cluster in clusters} == {("a",), ("b",), ("c",)}
 
 
 def test_select_v2_no_longer_hands_consensus_to_a_reindented_copy() -> None:

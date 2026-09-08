@@ -10,6 +10,29 @@ def test_repeated_perfect_adversarial_canaries_signal_contamination():
     assert result.contamination_suspected
 
 
+def test_canary_scoring_is_incomplete_without_full_planned_coverage():
+    missing_case = evaluate_canaries(
+        "v1", {"one": "PASS", "two": "FAIL"}, {"one": ["PASS"] * 3}
+    )
+    assert not missing_case.complete
+    assert missing_case.score == 0.0
+    wrong_repetitions = evaluate_canaries(
+        "v1", {"one": "PASS"}, {"one": ["PASS"] * 2}, planned_repetitions=3
+    )
+    assert not wrong_repetitions.complete
+    assert not wrong_repetitions.contamination_suspected
+
+
+def test_canary_cases_receive_equal_weight_after_complete_repetitions():
+    result = evaluate_canaries(
+        "v1",
+        {"one": "PASS", "two": "FAIL"},
+        {"one": ["PASS", "PASS", "PASS"], "two": ["FAIL", "PASS", "PASS"]},
+    )
+    assert result.complete
+    assert result.score == (1.0 + (1 / 3)) / 2
+
+
 def test_challengers_are_opt_in_and_default_is_unchanged():
     profiles = load_profiles()
     assert compose_judge_challengers(profiles["default"]) == []

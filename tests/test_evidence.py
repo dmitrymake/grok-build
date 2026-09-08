@@ -31,6 +31,8 @@ REPO_CONFIG = Path(__file__).resolve().parents[1] / "config" / "config.toml"
         (FailureSignal(text="write failed: ENOSPC"), "environment"),
         (FailureSignal(reason="timeout-infrastructure"), "environment"),
         (FailureSignal(text="model-upstream quota exhausted"), "model"),
+        (FailureSignal(text="API error: Rate limit reached for requests"), "model"),
+        (FailureSignal(text="BLOCKED: the rate-limit validation is incorrect"), "unknown"),
         (FailureSignal(reason="model-error"), "model"),
         (FailureSignal(text="unclassified transport failure"), "unknown"),
     ],

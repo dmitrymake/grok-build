@@ -14,6 +14,7 @@ or state mutation.
 
 from __future__ import annotations
 
+import math
 import posixpath
 import re
 from dataclasses import dataclass
@@ -98,6 +99,11 @@ class CriterionTokenVerdict:
     schema_version: int = 1
 
 
+def _logsumexp(values: list[float]) -> float:
+    peak = max(values)
+    return peak + math.log(sum(math.exp(value - peak) for value in values))
+
+
 def judge_criterion_token(
     token: str,
     token_logprobs: Mapping[str, float] | None,
@@ -106,17 +112,26 @@ def judge_criterion_token(
 ) -> CriterionTokenVerdict:
     """Calibrate a forced token from provider logits or abstain cleanly."""
     normalized = str(token).strip().upper()
-    threshold = max(0.0, float(calibrated_threshold))
+    try:
+        threshold = float(calibrated_threshold)
+    except (TypeError, ValueError):
+        threshold = math.nan
+    if not math.isfinite(threshold) or threshold < 0.0:
+        return CriterionTokenVerdict("ABSTAIN_LOGITS_UNAVAILABLE", normalized, None, threshold, False)
     if normalized not in TOKEN_OUTCOMES:
         return CriterionTokenVerdict("ABSTAIN_MALFORMED_TOKEN", normalized, None, threshold, False)
     if not token_logprobs:
         return CriterionTokenVerdict("ABSTAIN_LOGITS_UNAVAILABLE", normalized, None, threshold, False)
     try:
-        scores = {}
+        aliases: dict[str, list[float]] = {}
         for raw_name, score in token_logprobs.items():
-            name = str(raw_name).strip().upper().lstrip("Ġ▁")
+            name = str(raw_name).strip().lstrip("Ġ▁").strip().upper()
             if name in TOKEN_OUTCOMES:
-                scores[name] = float(score)
+                value = float(score)
+                if not math.isfinite(value):
+                    raise ValueError("non-finite log probability")
+                aliases.setdefault(name, []).append(value)
+        scores = {name: _logsumexp(values) for name, values in aliases.items()}
     except (AttributeError, TypeError, ValueError):
         return CriterionTokenVerdict("ABSTAIN_LOGITS_UNAVAILABLE", normalized, None, threshold, False)
     if normalized not in scores or len(scores) < 2:

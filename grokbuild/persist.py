@@ -34,7 +34,13 @@ MAX_LOG_FILES = 3
 
 
 def state_dir() -> Path:
-    return Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state")) / "grok-route"
+    configured = os.environ.get("XDG_STATE_HOME")
+    if not configured:
+        base = Path.home() / ".local" / "state"
+    else:
+        candidate = Path(configured).expanduser()
+        base = candidate if candidate.is_absolute() else Path.home() / ".local" / "state"
+    return base / "grok-route"
 
 
 def sidecar_path(name: str) -> Path:

@@ -24,6 +24,7 @@ Three rules make the answer worth having:
 
 from __future__ import annotations
 
+import math
 import re
 import unicodedata
 from dataclasses import dataclass, field
@@ -55,6 +56,8 @@ REASON_CODES = (
     "deterministic_unknown",
     "reject_all",
     "low_margin",
+    "invalid_candidate_labels",
+    "malformed_opinions",
 )
 
 # Component aliases shorter than this ("pro", "max", "std") are too common to
@@ -179,7 +182,7 @@ class ComparisonAggregate:
     evidence_round: int = 0
     final: str = "ABSTAIN"
     margin: float = 0.0
-    position_bias: float = 0.0
+    position_bias: float | None = None
     repeatability: float = 0.0
     schema_version: int = 1
 
@@ -417,6 +420,14 @@ def _requirement_results(
     return tuple(results)
 
 
+def valid_candidate_labels(candidates: Sequence[Candidate]) -> bool:
+    """Return whether candidate labels are non-empty and unique."""
+    labels = [candidate.label for candidate in candidates]
+    return all(isinstance(label, str) and bool(label.strip()) for label in labels) and len(
+        set(labels)
+    ) == len(labels)
+
+
 def hard_precedence(
     contract: TaskContract, a: Candidate, b: Candidate
 ) -> tuple[str, tuple[str, ...]]:
@@ -427,6 +438,8 @@ def hard_precedence(
     can overturn it. A requirement neither candidate satisfies is a failure for
     both and does not separate them.
     """
+    if not valid_candidate_labels((a, b)):
+        return "", ()
     failures: list[str] = []
     winner = ""
     for requirement in contract.hard_requirements:
@@ -457,6 +470,8 @@ def fold_opinions(
     only show up when both orders were actually judged, so a single opinion,
     or several in the same order, is not an answer either.
     """
+    if not valid_candidate_labels((a, b)):
+        return "needs_discriminating_test", 0.0, ("invalid_candidate_labels",)
     if not opinions:
         return "needs_discriminating_test", 0.0, ("judge_abstained",)
     if any(opinion.abstained for opinion in opinions):
@@ -475,6 +490,34 @@ def fold_opinions(
     return ("a" if preferred == a.label else "b"), confidence, ("judges_agree",)
 
 
+def _opinions_valid(
+    a: Candidate, b: Candidate, base: Sequence[JudgeOpinion], extra: Sequence[JudgeOpinion]
+) -> bool:
+    if not valid_candidate_labels((a, b)):
+        return False
+    pair = {(a.label, b.label), (b.label, a.label)}
+    reads = (*base, *extra)
+    if len(base) != 2 or any(not isinstance(item, JudgeOpinion) for item in reads):
+        return False
+    if {(item.first, item.second) for item in base} != pair:
+        return False
+    invocation_ids: list[str] = []
+    for item in reads:
+        if (item.first, item.second) not in pair:
+            return False
+        if item.prefers not in {a.label, b.label, "abstain"}:
+            return False
+        if isinstance(item.confidence, bool) or not isinstance(item.confidence, (int, float)):
+            return False
+        if not math.isfinite(float(item.confidence)) or not 0.0 <= float(item.confidence) <= 1.0:
+            return False
+        if item.invocation_id:
+            invocation_ids.append(item.invocation_id)
+    return all(item.invocation_id for item in extra) and len(invocation_ids) == len(
+        set(invocation_ids)
+    )
+
+
 def aggregate_opinions(
     a: Candidate,
     b: Candidate,
@@ -490,25 +533,30 @@ def aggregate_opinions(
     reads = tuple(opinions[:maximum])
     base = reads[:2]
     extra = reads[2:]
-    valid_orders = {(a.label, b.label), (b.label, a.label)}
-    complete_base = len(base) == 2 and {x[:2] for x in ((op.first, op.second) for op in base)} == valid_orders
-    votes = [op.prefers for op in reads if not op.abstained and op.prefers in {a.label, b.label}]
+    valid = _opinions_valid(a, b, base, extra)
+    votes = [item.prefers for item in reads if valid and item.prefers != "abstain"]
     count_a = votes.count(a.label)
     count_b = votes.count(b.label)
-    total = count_a + count_b
+    total = len(votes)
     margin = abs(count_a - count_b) / total if total else 0.0
-    first_votes = [op.prefers for op in reads if op.first == a.label and not op.abstained]
-    second_votes = [op.prefers for op in reads if op.first == b.label and not op.abstained]
-    position_bias = 0.0
-    if first_votes and second_votes:
-        first_position = sum(op.prefers == op.first for op in reads if not op.abstained) / len(votes)
-        second_position = sum(op.prefers == op.second for op in reads if not op.abstained) / len(votes)
-        position_bias = abs(first_position - second_position)
+    by_order = {
+        order: [item for item in reads if valid and (item.first, item.second) == order and not item.abstained]
+        for order in ((a.label, b.label), (b.label, a.label))
+    }
+    position_bias = None
+    if all(by_order.values()):
+        rate_ab = sum(item.prefers == a.label for item in by_order[(a.label, b.label)]) / len(
+            by_order[(a.label, b.label)]
+        )
+        rate_ba = sum(item.prefers == a.label for item in by_order[(b.label, a.label)]) / len(
+            by_order[(b.label, a.label)]
+        )
+        position_bias = abs(rate_ab - rate_ba)
     repeatability = max(count_a, count_b) / total if total else 0.0
-    if not complete_base or any(op.abstained for op in base) or not total or margin <= abstain_margin:
+    if not valid or any(item.abstained for item in base) or not total or margin <= abstain_margin:
         final = "ABSTAIN"
     else:
-        final = "A" if count_a > count_b else "B" if count_b > count_a else "ABSTAIN"
+        final = "A" if count_a > count_b else "B"
     return ComparisonAggregate(
         comparison_id or f"{a.label}:{b.label}:{evidence_round}",
         a.label,
@@ -544,6 +592,14 @@ def compare(
     evidence_round: int = 0,
 ) -> Verdict:
     """Gate candidates first, then compare only deterministic survivors."""
+    if not valid_candidate_labels((a, b)):
+        return Verdict(
+            "unjudgeable",
+            0.0,
+            reason_codes=("invalid_candidate_labels",),
+            deterministic_status="validation_error",
+            comparison_id=comparison_id,
+        )
     gate = decide_gate({a.label: _candidate_checks(contract, a), b.label: _candidate_checks(contract, b)})
     results = _requirement_results(contract, a, b)
     failures = tuple(
@@ -595,19 +651,22 @@ def compare(
         abstain_margin=abstain_margin,
         evidence_round=evidence_round,
     )
+    valid_opinions = _opinions_valid(a, b, aggregate.base_reads, aggregate.additional_reads)
     if aggregate.final == "A":
         verdict, codes = "a", ("judges_agree",)
     elif aggregate.final == "B":
         verdict, codes = "b", ("judges_agree",)
     else:
         verdict = "needs_discriminating_test"
-        votes = [op.prefers for op in aggregate.reads if not op.abstained]
+        votes = [op.prefers for op in aggregate.reads if valid_opinions and not op.abstained]
         codes = (
             ("judges_disagree",)
             if votes.count(a.label) == votes.count(b.label)
             else ("low_margin",)
         )
-        if any(op.abstained for op in aggregate.base_reads):
+        if not valid_opinions:
+            codes = ("malformed_opinions",)
+        elif any(op.abstained for op in aggregate.base_reads):
             codes = ("judge_abstained",)
     confidence = (
         min(op.confidence for op in aggregate.reads if not op.abstained)
@@ -639,4 +698,5 @@ __all__ = [
     "fold_opinions",
     "hard_precedence",
     "sanitize",
+    "valid_candidate_labels",
 ]

@@ -331,6 +331,33 @@
             "structured_output": null,
             "logprobs": null
           },
+          "balance": "ordered",
+          "endpoints": [
+            {
+              "provider": "zai",
+              "model_binding": "glm-5.3",
+              "subscription_class": "primary",
+              "auth": "api_key",
+              "credential_env": "ZAI_API_KEY",
+              "require_availability_signal": false
+            },
+            {
+              "provider": "commandcode",
+              "model_binding": "glm-5.3@commandcode",
+              "subscription_class": "reserve",
+              "auth": "api_key",
+              "credential_env": "COMMANDCODE_API_KEY",
+              "require_availability_signal": false
+            },
+            {
+              "provider": "opencode",
+              "model_binding": "glm-5.3@opencode",
+              "subscription_class": "reserve",
+              "auth": "api_key",
+              "credential_env": "OPENCODE_GO_API_KEY",
+              "require_availability_signal": false
+            }
+          ],
           "family": "glm-5.3"
         },
         "glm-5.3-flash": {

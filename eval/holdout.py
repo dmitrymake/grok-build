@@ -44,8 +44,18 @@ def validate_holdout_boundary(
         return HoldoutBoundary(False, "holdout grading network is not off")
     if not grader_read_only:
         return HoldoutBoundary(False, "grader mount is not read-only")
-    hidden_roles = {"candidate", "proposer", "applier", "judge"}
-    if any(actor_views.get(role) for role in hidden_roles):
+    required_roles = ("proposer", "applier", "judge")
+    for role in required_roles:
+        values = actor_views.get(role)
+        if (
+            values is None
+            or isinstance(values, (str, bytes))
+            or not isinstance(values, Sequence)
+            or not all(isinstance(item, str) for item in values)
+        ):
+            return HoldoutBoundary(False, f"actor capability view for {role} is missing or invalid")
+    hidden_roles = (*required_roles, "candidate")
+    if any(role in actor_views and actor_views[role] for role in hidden_roles):
         return HoldoutBoundary(False, "actor capability view exposes holdout paths")
     expected_files = manifest.get("files")
     expected_digest = manifest.get("digest")
@@ -57,7 +67,12 @@ def validate_holdout_boundary(
         return HoldoutBoundary(False, "holdout manifest path is unavailable")
     if root not in manifest_path.parents:
         return HoldoutBoundary(False, "holdout manifest escapes its root")
-    actual = file_digest(manifest_path)
+    if not manifest_path.is_file():
+        return HoldoutBoundary(False, "holdout manifest path is not a regular file")
+    try:
+        actual = file_digest(manifest_path)
+    except OSError:
+        return HoldoutBoundary(False, "holdout manifest cannot be read")
     if actual != expected_digest:
         return HoldoutBoundary(False, "holdout digest mismatch")
     return HoldoutBoundary(True, "boundary verified", actual)

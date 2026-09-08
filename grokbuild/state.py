@@ -265,6 +265,21 @@ class ExecutionTrack:
             and not self.review_inconclusive(self.member_key(stage.stage_id, member.member_id))
         ]
 
+    def next_incomplete_required_stage(self) -> ExecutionStage | None:
+        """Return the first unfinished required stage in composition order."""
+        for stage in self.stages:
+            if not stage.required:
+                continue
+            if stage.kind == "parallel_spawn":
+                if self.incomplete_required_members(stage):
+                    return stage
+            elif stage.kind == "verify":
+                if (stage.stage_id or stage.role) not in self.verified:
+                    return stage
+            elif stage.role not in self.completed and not self.review_inconclusive(stage.role):
+                return stage
+        return None
+
     def next_required_barrier_or_role(self) -> ExecutionStage | str | None:
         """Return fail-closed runtime barriers before ordinary required stages."""
         sentinel = next(
@@ -287,15 +302,12 @@ class ExecutionTrack:
         )
         if consilium is not None:
             return consilium
-        for stage in self.stages:
-            if not stage.required or not stage.spawnable:
-                continue
-            if stage.kind == "parallel_spawn":
-                if self.incomplete_required_members(stage):
-                    return stage
-            elif stage.role not in self.completed and not self.review_inconclusive(stage.role):
-                return stage.role
-        return None
+        stage = self.next_incomplete_required_stage()
+        if stage is None or not stage.spawnable:
+            return None
+        if stage.kind == "parallel_spawn":
+            return stage
+        return stage.role
 
     def to_dict(self) -> dict[str, Any]:
         return {

@@ -40,7 +40,7 @@ Requirements are POSIX with `fcntl`, Python 3.11 or newer, and the Grok CLI.
 The installer is idempotent. It symlinks repository files into `~/.grok` for agents, skills, rules, hooks, and routing, and links or merges `config.toml` with a backup. It does not provision, modify, or print credentials. When `~/.grok/config.toml` is an account-owned regular file, it reads it, creates a backup, and merges managed tables while preserving unmanaged settings, which may include embedded credential values. It does not provision `~/.env_keys`. Re-running the installer synchronizes missing repository model and role blocks into an account-owned live config while preserving existing live pins.
 
 ```bash
-grok-route roles
+./scripts/grok-route roles
 printf '{}' | ~/.grok/hooks/route.py
 ./tests/grok-route-test.sh
 ```
@@ -65,8 +65,8 @@ Together binds both opt-in challengers to `openai/gpt-oss-120b`; the retained `o
 
 The derived levels are:
 
-- **Minimum — Codex subscription:** `explore`, `explore-thorough`, `plan`, `plan-hard`, `implement`, `implement-cheap`, `implement-standard`, `implement-strong`, `implement-hard`, `planner-strong`, `review`, `review-hard`, `visual-intake-deep`, and `consilium-arbiter`. This is the smallest credential set where implementation and planning intents work end-to-end with internal review and deterministic gates; independent review and security verification require the xai availability signal, and security analysis plus the conductor's primary chain are degraded.
-- **Recommended — Codex + Zai + OpenCode Go:** all Minimum roles plus `implement-ops`, `security`, `consilium-analyst`, `implement-overflow`, `implement-cheap-fallback`, and `consilium-challenger`. This supplies the operations and security roles, overflow and last-resort fallback, consilium provider diversity, and the primary conductor provider.
+- **Minimum — Codex subscription:** `explore`, `explore-thorough`, `plan`, `plan-hard`, `implement`, `implement-cheap`, `implement-standard`, `implement-strong`, `implement-hard`, `planner-strong`, `review`, `visual-intake-deep`, and `consilium-arbiter`. This is the smallest credential set where implementation and planning intents have the Codex stages available; full end-to-end completion with internal review also requires Zai for `review-hard`, plus deterministic gates.
+- **Recommended — Codex + Zai + OpenCode Go:** all Minimum roles plus `review-hard`, `implement-ops`, `security`, `consilium-analyst`, `implement-overflow`, `implement-cheap-fallback`, and `consilium-challenger`. This supplies the operations and security roles, overflow and last-resort fallback, consilium provider diversity, and the primary conductor provider.
 - **Full — Recommended + xai session, Command Code, MiniMax, Together AI, and minimax credential:** all configured roles, adding `review-independent`, `expert-rescue`, `security-verify`, `visual-intake`, the opt-in judge challengers, and the remaining delegated roles; xai still requires its explicit availability signal.
 
 **OpenCode Go only is insufficient.** It resolves only `implement-overflow`, `implement-cheap-fallback`, and `consilium-challenger`, not reconnaissance, planning, primary implementation tiers, review, or security. Because required `explore` reconnaissance fails, routes degrade to observe-only rather than providing an end-to-end implementation path.

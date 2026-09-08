@@ -250,6 +250,24 @@ description = "Z.AI GLM-5.3 Coding Plan subscription (~1M); the top model of the
 env_key = "ZAI_API_KEY"
 context_window = 1000000
 
+[model."glm-5.3@commandcode"]
+model = "zai-org/GLM-5.3"
+base_url = "https://api.commandcode.ai/provider/v1"
+api_backend = "chat_completions"
+name = "GLM-5.3 (Command Code)"
+description = "Command Code peer endpoint for GLM-5.3; used when the Z.AI plan endpoint is unavailable. Verified in /provider/v1/models 2026-09-08."
+env_key = "COMMANDCODE_API_KEY"
+context_window = 1000000
+
+[model."glm-5.3@opencode"]
+model = "glm-5.3"
+base_url = "https://opencode.ai/zen/go/v1"
+api_backend = "chat_completions"
+name = "GLM-5.3 (OpenCode Go)"
+description = "OpenCode Go peer endpoint for GLM-5.3; used when the Z.AI plan endpoint is unavailable. Verified in /models 2026-09-08."
+env_key = "OPENCODE_GO_API_KEY"
+context_window = 1000000
+
 [model."glm-5.3-flash"]
 model = "glm-5.3-flash"
 base_url = "https://api.z.ai/api/coding/paas/v4"

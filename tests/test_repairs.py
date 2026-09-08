@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from grokbuild.cli import _parse_until
-from grokbuild.payloads import spawn_background
+from grokbuild.payloads import spawn_background, spawn_result_status
 from grokbuild.persist import state_dir
 from grokbuild.policy import Profile, resolve_mode_from_env
 from grokbuild.shell_guard import _tool_command
@@ -19,13 +19,21 @@ def test_parse_until_requires_timezone() -> None:
     assert _parse_until("2026-09-01T00:00:00Z")
 
 
-def test_state_dir_empty_xdg_is_relative(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_state_dir_empty_and_relative_xdg_fall_back(monkeypatch: pytest.MonkeyPatch) -> None:
+    fallback = Path.home() / ".local" / "state" / "grok-route"
     monkeypatch.setenv("XDG_STATE_HOME", "")
-    assert state_dir() == Path("grok-route")
+    assert state_dir() == fallback
+    monkeypatch.setenv("XDG_STATE_HOME", "relative-state")
+    assert state_dir() == fallback
     monkeypatch.delenv("XDG_STATE_HOME")
-    assert state_dir() == Path.home() / ".local" / "state" / "grok-route"
+    assert state_dir() == fallback
     monkeypatch.setenv("XDG_STATE_HOME", "/tmp/grok-state")
     assert state_dir() == Path("/tmp/grok-state/grok-route")
+
+
+def test_background_failure_is_terminal_but_ack_is_incomplete() -> None:
+    assert spawn_result_status({"background": True, "toolResult": "failed: worker exited"}) == "failure"
+    assert spawn_result_status({"background": True, "toolResult": "Task started in background"}) == "incomplete"
 
 
 def test_outer_tool_payload_semantics() -> None:

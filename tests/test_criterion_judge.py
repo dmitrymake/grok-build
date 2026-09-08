@@ -98,6 +98,31 @@ def test_forced_token_requires_real_provider_logits_and_calibrated_margin() -> N
     assert judge_criterion_token("yes", {"PASS": 0.0, "FAIL": -1.0}, calibrated_threshold=0.1).outcome == "ABSTAIN_MALFORMED_TOKEN"
 
 
+def test_non_finite_scores_and_thresholds_abstain_uncalibrated() -> None:
+    for score in (float("nan"), float("inf"), float("-inf")):
+        verdict = judge_criterion_token(
+            "PASS", {"PASS": score, "FAIL": -1.0}, calibrated_threshold=0.1
+        )
+        assert verdict.outcome == "ABSTAIN_LOGITS_UNAVAILABLE"
+        assert not verdict.calibrated
+    for threshold in (float("nan"), float("inf"), float("-inf"), -0.1):
+        verdict = judge_criterion_token(
+            "PASS", {"PASS": -0.1, "FAIL": -1.0}, calibrated_threshold=threshold
+        )
+        assert verdict.outcome == "ABSTAIN_LOGITS_UNAVAILABLE"
+        assert not verdict.calibrated
+
+
+def test_token_alias_log_probabilities_are_combined() -> None:
+    verdict = judge_criterion_token(
+        "PASS",
+        {"PASS": -1.0, " PASS": -1.0, "FAIL": -0.5},
+        calibrated_threshold=0.1,
+    )
+    assert verdict.outcome == "PASS"
+    assert verdict.margin is not None and verdict.margin > 0.1
+
+
 def test_verdict_is_deterministic() -> None:
     criterion = {"kind": "check_passed", "expected": "tests"}
     evidence = {"checks": {"tests": True}}

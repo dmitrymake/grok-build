@@ -304,6 +304,9 @@ def _enforceable_barrier_members(track: object, stage: object) -> list:
 
 def _next_required_spawn_stage(track: object):
     """Return the current enforceable linear stage or parallel barrier."""
+    ordered = getattr(track, "next_incomplete_required_stage", lambda: None)()
+    if ordered is not None and not ordered.spawnable:
+        return None
     sentinel = next(
         (
             stage
@@ -382,7 +385,7 @@ def _enforceable_gate(decision_id: str | None, route: dict) -> tuple[bool, str]:
                 warnings = route.setdefault("warnings", [])
                 if "barrier_stall" not in warnings:
                     warnings.append("barrier_stall")
-                return True, f"barrier_stall: barrier {next_stage.stage_id} stalled for {age:.0f}s"
+                return True, f"barrier_stall: barrier {next_stage.stage_id} stalled for {age:.0f}s; spawn retries still require normal member validation"
             return False, _barrier_recipe(route, track, next_stage)
         if next_stage.kind in {"judge", "evidence_collection"}:
             return False, _control_plane_recipe(route, next_stage)
@@ -512,7 +515,7 @@ def _barrier_recipe(route: dict, track: object, stage: object) -> str:
     return (
         f"route={route.get('intent')}: NEXT: {action}. "
         f"Barrier '{stage.stage_id}' members: {outstanding}; bound tasks: {', '.join(awaiting) or 'none'}."
-        f"{diet}{capability}{consilium} Retrieve bound task ids one at a time; a multi-id batch cannot close a member with success; if all statuses remain incomplete/not_found, this is a no-op, composition unchanged. "
+        f"{diet}{capability}{consilium} Retrieve bound task ids one id at a time (one at a time); TEXT-ONLY multi-id batch successes cannot settle members (structural per-ID successes are supported); if all statuses remain incomplete/not_found, this is a no-op, composition unchanged. "
         f"Retrieve task results one id at a time."
         f"{reason_hint} {STOP_FEEDBACK_MARK}."
     )

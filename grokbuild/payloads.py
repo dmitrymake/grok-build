@@ -355,13 +355,14 @@ def structural_spawn_status(raw: object) -> str | None:
 
 def spawn_result_status(data: dict) -> str:
     """Return the authoritative spawn result classification."""
-    if spawn_background(data):
-        return "incomplete"
     raw = tool_result_raw(data)
     if raw is None:
         return "incomplete"
     if isinstance(raw, str):
-        return classify_result_text(raw)
+        classified = classify_result_text(raw)
+        if classified == "failure":
+            return classified
+        return "incomplete" if spawn_background(data) else classified
     if isinstance(raw, dict):
         structural = structural_spawn_status(raw)
         if structural is not None:
@@ -374,7 +375,12 @@ def spawn_result_status(data: dict) -> str:
             or raw.get("output")
         )
         if isinstance(text, str):
-            return classify_result_text(text)
+            classified = classify_result_text(text)
+            if classified == "failure":
+                return classified
+            if spawn_background(data):
+                return "incomplete"
+            return classified
         return "incomplete"
     return "incomplete"
 

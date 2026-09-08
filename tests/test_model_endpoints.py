@@ -32,6 +32,23 @@ REPO_CONFIG = ROOT / "config" / "config.toml"
 MODEL = "deepseek-v4-pro"
 
 
+def test_glm53_catalog_has_zai_commandcode_and_opencode_peers() -> None:
+    catalog = load_provider_catalog()
+    meta = catalog["glm-5.3"]
+    assert [endpoint.provider for endpoint in meta.endpoints] == [
+        "zai",
+        "commandcode",
+        "opencode",
+    ]
+    assert [endpoint.model_binding for endpoint in meta.endpoints] == [
+        "glm-5.3",
+        "glm-5.3@commandcode",
+        "glm-5.3@opencode",
+    ]
+    assert meta.endpoints[1].credential_env == "COMMANDCODE_API_KEY"
+    assert meta.endpoints[2].credential_env == "OPENCODE_GO_API_KEY"
+
+
 def _registry(role_name: str = "implement-overflow") -> RoleRegistry:
     catalog = load_provider_catalog()
     meta = catalog[MODEL]

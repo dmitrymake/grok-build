@@ -13,6 +13,14 @@ from grokbuild.persist import append_jsonl, sidecar_path
 FailureCause = Literal["auth", "environment", "model", "unknown"]
 EVIDENCE_SCHEMA = "evidence-v1"
 _MAX_DETAIL = 500
+_QUOTA_FAILURE_RE = re.compile(
+    r"(?:\b429\b|\btoo many requests\b|"
+    r"\brate[-_ ]limit(?: has| is)? (?:reached|exceeded)\b|"
+    r"\b(?:api|session|provider|upstream)[-_ ]error[^\n|]{0,80}\brate[-_ ]limited\b|"
+    r"\b(?:quota|(?:monthly )?usage limit)[^\n|]{0,40}(?:exhausted|exceeded|reached)\b|"
+    r"\binsufficient quota\b)",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -46,6 +54,11 @@ class EvidenceRecord:
         return asdict(self)
 
 
+def is_quota_failure(value: str) -> bool:
+    """Return whether text contains an unambiguous provider quota failure."""
+    return bool(_QUOTA_FAILURE_RE.search(value))
+
+
 def classify_failure(signal: FailureSignal) -> FailureCause:
     """Classify a failure conservatively; unknown remains on the model path."""
     value = " ".join(
@@ -59,7 +72,9 @@ def classify_failure(signal: FailureSignal) -> FailureCause:
         value,
     ):
         return "environment"
-    if re.search(r"(?:\b429\b|\bquota\b|model[-_ ]upstream|model[-_ ]error)", value):
+    if is_quota_failure(value) or re.search(
+        r"(?:\bmodel[-_ ](?:upstream|error)\b|\bquota pressured\b)", value
+    ):
         return "model"
     return "unknown"
 
@@ -101,6 +116,7 @@ __all__ = [
     "FailureSignal",
     "classify_failure",
     "evidence_path",
+    "is_quota_failure",
     "make_evidence",
     "persist_evidence",
 ]
