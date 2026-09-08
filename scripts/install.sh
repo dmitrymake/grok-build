@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Install Grok Build's public configuration, roles, skills, routing modules, and hooks.
-# The operation is idempotent and never reads or writes account credentials.
+# The operation is idempotent and never prints or provisions account credentials; config merging may read live account-owned settings.
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 REPO_DIR="${REPO_DIR:-$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)}"
@@ -118,14 +118,18 @@ PY
 
 mkdir -p "$HOME/.grok/agents" "$HOME/.grok/skills" "$HOME/.grok/rules" \
   "$HOME/.grok/hooks" "$HOME/.grok/routing" "$HOME/.grok/routing/fixtures"
-link_file "$REPO_DIR/config/config.toml" "$HOME/.grok/config.toml"
+fresh_config=0
+if [ ! -e "$HOME/.grok/config.toml" ] && [ ! -L "$HOME/.grok/config.toml" ]; then
+  install -m 600 /dev/null "$HOME/.grok/config.toml"
+  fresh_config=1
+fi
 
 # Grok loads model and role declarations from the live user config. When that
 # file is account-owned (regular, not a symlink), preserve all live values and
-# fill only missing repository declarations. Back up before changes; never
-# inspect or print secret values.
+# fill only missing repository declarations. Back up before changes; never print
+# secret values.
 if [ -f "$REPO_DIR/config/config.toml" ] && [ -f "$HOME/.grok/config.toml" ] && [ ! -L "$HOME/.grok/config.toml" ]; then
-  python3 - "$REPO_DIR/config/config.toml" "$HOME/.grok/config.toml" <<'PY'
+  python3 - "$REPO_DIR/config/config.toml" "$HOME/.grok/config.toml" "$fresh_config" <<'PY'
 import os
 import re
 import shutil
@@ -135,7 +139,8 @@ import time
 import tomllib
 from pathlib import Path
 
-repo, live = map(Path, sys.argv[1:])
+repo, live = map(Path, sys.argv[1:3])
+fresh = sys.argv[3] == "1"
 header = re.compile(r"^\s*\[([^\[\]]+)\]\s*$")
 
 # Repository verifier entries and selected routing/corpus tables are merged into
@@ -163,6 +168,8 @@ def fill_missing_tables(live_text: str, repo_text: str) -> str:
         while index < len(repo_lines) and not header.match(repo_lines[index]):
             index += 1
         block = repo_lines[start:index]
+        if section == "ui":
+            continue
         if section not in headers:
             additions.extend(block)
             continue
@@ -275,13 +282,14 @@ for section in ("routing.conductor", "routing.second_opinion", "corpus.taxonomy"
     if any(key not in initial and ensured[key] != value for key, value in repo_table.items()):
         raise SystemExit(f"[{section}] must contain repository values for missing keys")
 if new != old:
-    stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
-    backup = live.with_name(f"config.toml.before-combine-{stamp}.bak")
-    counter = 1
-    while backup.exists():
-        backup = live.with_name(f"config.toml.before-combine-{stamp}-{counter}.bak")
-        counter += 1
-    shutil.copy2(live, backup)
+    if not fresh:
+        stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+        backup = live.with_name(f"config.toml.before-combine-{stamp}.bak")
+        counter = 1
+        while backup.exists():
+            backup = live.with_name(f"config.toml.before-combine-{stamp}-{counter}.bak")
+            counter += 1
+        shutil.copy2(live, backup)
     fd, temp_name = tempfile.mkstemp(prefix=f".{live.name}.", dir=live.parent)
     try:
         os.fchmod(fd, live.stat().st_mode & 0o7777)
@@ -294,7 +302,7 @@ if new != old:
         if os.path.exists(temp_name):
             os.unlink(temp_name)
 PY
-  ok "$HOME/.grok/config.toml merged with live pins authoritative (backup created when changed)"
+  ok "$HOME/.grok/config.toml merged with live pins authoritative (pre-existing config backed up when changed)"
   info "merge summary: existing live model, role, and routing values preserved; missing repository declarations filled"
 fi
 link_file "$REPO_DIR/rules/security-models.md" "$HOME/.grok/rules/security-models.md"

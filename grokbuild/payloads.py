@@ -513,16 +513,43 @@ def structural_task_statuses(raw: object) -> dict[str, str]:
     return statuses
 
 
+def structural_task_outputs(raw: object) -> dict[str, str]:
+    """Map unique structured envelope ids directly to their own output."""
+    items = raw if isinstance(raw, list) else [raw]
+    outputs: dict[str, str] = {}
+    ambiguous: set[str] = set()
+    for item in items:
+        if not isinstance(item, dict) or _envelope_header_lines(item) is None:
+            continue
+        task_id = str(item.get("task_id") or item.get("taskId") or "").strip()
+        if not task_id:
+            continue
+        if task_id in outputs:
+            ambiguous.add(task_id)
+            continue
+        output = content_text(item.get("output"))
+        outputs[task_id] = output or ""
+    for task_id in ambiguous:
+        outputs.pop(task_id, None)
+    return outputs
+
+
 def retrieval_task_sections(raw: str | None) -> dict[str, str]:
-    """Map each task id in a retrieval text to its own section, header included."""
+    """Map unique text-header task ids to their own sections."""
     if not isinstance(raw, str):
         return {}
     headers = list(_RETRIEVAL_TASK_HEADER_RE.finditer(raw))
     sections: dict[str, str] = {}
+    ambiguous: set[str] = set()
     for index, header in enumerate(headers):
         task_id = (header.group(1) or header.group(3)).strip()
         end = headers[index + 1].start() if index + 1 < len(headers) else len(raw)
+        if task_id in sections:
+            ambiguous.add(task_id)
+            continue
         sections[task_id] = raw[header.start() : end]
+    for task_id in ambiguous:
+        sections.pop(task_id, None)
     return sections
 
 
@@ -550,8 +577,12 @@ def retrieval_task_statuses(
     statuses: dict[str, str] = {}
     if raw is not None:
         headers = list(_RETRIEVAL_TASK_HEADER_RE.finditer(raw))
+        header_ids = [(header.group(1) or header.group(3)).strip() for header in headers]
+        ambiguous = {task_id for task_id in header_ids if header_ids.count(task_id) > 1}
         for index, header in enumerate(headers):
             task_id = (header.group(1) or header.group(3)).strip()
+            if task_id in ambiguous:
+                continue
             bracket_status = (header.group(2) or "").strip().casefold()
             end = headers[index + 1].start() if index + 1 < len(headers) else len(raw)
             status = retrieval_section_status(raw[header.end() : end])
@@ -572,13 +603,13 @@ def retrieval_task_statuses(
             if task_id not in statuses or rank.get(status, 2) < rank.get(statuses[task_id], 2):
                 statuses[task_id] = status
         for match in _RETRIEVAL_TASK_NOT_FOUND_RE.finditer(raw):
-            statuses[match.group(1)] = "not_found"
+            if match.group(1) not in ambiguous:
+                statuses[match.group(1)] = "not_found"
         if _REGISTRY_EMPTY_RE.search(raw):
             for task_id in requested_ids or ():
                 statuses.setdefault(task_id, "not_found")
     for task_id, status in structural_task_statuses(tool_result_raw(data)).items():
-        if statuses.get(task_id) != "not_found":
-            statuses[task_id] = status
+        statuses[task_id] = status
     return statuses
 
 
@@ -705,6 +736,7 @@ __all__ = [
     "structural_spawn_status",
     "structural_task_statuses",
     "structured_retrieval_text",
+    "structural_task_outputs",
     "task_ids",
     "tool_input",
     "tool_result_raw",

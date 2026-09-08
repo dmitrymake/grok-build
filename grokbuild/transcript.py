@@ -9,7 +9,7 @@ import time
 from collections import OrderedDict
 from pathlib import Path
 
-from grokbuild.classify import extract_user_text, is_synthetic_stop_feedback
+from grokbuild.classify import extract_host_user_text, extract_user_text, is_synthetic_stop_feedback
 from grokbuild.payloads import looks_incomplete
 from grokbuild.persist import atomic_update_json, sidecar_path
 from grokbuild.roles import IMPLEMENT_ROLE_NAMES, ROLE_ALIASES, load_registry
@@ -297,7 +297,7 @@ def last_user_prompt(session_id: str | None, history_path: Path | None = None) -
         path = folder / "chat_history.jsonl"
     for record in _iter_jsonl_reversed(path):
         if _is_real_user(record):
-            return extract_user_text(_message_text(record))
+            return extract_host_user_text(_message_text(record))
     return ""
 
 

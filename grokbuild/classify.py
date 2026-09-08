@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parent
 INTENTS_PATH = ROOT / "intents.json"
 
 USER_QUERY_FULL_RE = re.compile(r"\s*<user_query>\s*(.*?)\s*</user_query>\s*", re.DOTALL)
+USER_QUERY_REGION_RE = re.compile(r"<user_query>(.*?)</user_query>", re.DOTALL)
 SYSTEM_REMINDER_RE = re.compile(r"<system-reminder>.*?</system-reminder>", re.DOTALL)
 USER_INFO_RE = re.compile(r"<user_info>.*?</user_info>", re.DOTALL)
 STOP_FEEDBACK_MARK = "[[GROK_ROUTE_STOP_FEEDBACK:v1]]"
@@ -54,6 +55,20 @@ def extract_user_text(text: str) -> str:
     if match:
         return match.group(1).strip()
     return body.strip()
+
+
+def extract_host_user_text(text: str) -> str:
+    """Preserve one host-delimited query body while dropping outside context."""
+    blob = text or ""
+    matches = list(USER_QUERY_REGION_RE.finditer(blob))
+    if len(matches) == 1 and len(re.findall(r"</?user_query>", blob)) == 2:
+        match = matches[0]
+        outside = blob[: match.start()] + blob[match.end() :]
+        outside = SYSTEM_REMINDER_RE.sub("", outside)
+        outside = USER_INFO_RE.sub("", outside)
+        if not outside.strip() and match.group(1).strip():
+            return match.group(1)
+    return extract_user_text(blob)
 
 
 def extract_user_text_raw(text: str) -> str:

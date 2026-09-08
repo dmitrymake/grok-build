@@ -15,9 +15,13 @@ from _harness import bootstrap
 bootstrap()
 ROOT = REPO_ROOT / "grokbuild"
 
+import email.message
 import json
 import stat
 import tempfile
+import urllib.error
+
+import pytest
 
 
 import grokbuild.discovery as discovery  # noqa: E402
@@ -74,6 +78,93 @@ PROVIDERS = {
         }
     },
 }
+
+
+class _Response:
+    status = 200
+
+    def __init__(self, payload: bytes = b'{"data": []}') -> None:
+        self.payload = payload
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return False
+
+    def read(self, _limit: int) -> bytes:
+        return self.payload
+
+
+class _RedirectingOpener:
+    def __init__(self, location: str) -> None:
+        self.location = location
+        self.requests = []
+
+    def open(self, request, timeout):
+        self.requests.append(request)
+        if len(self.requests) == 1:
+            headers = email.message.Message()
+            headers["Location"] = self.location
+            raise urllib.error.HTTPError(request.full_url, 302, "redirect", headers, None)
+        return _Response()
+
+
+def test_authenticated_discovery_rejects_cross_origin_redirect(monkeypatch) -> None:
+    opener = _RedirectingOpener("https://attacker.test/models")
+    monkeypatch.setattr(discovery, "_AUTHENTICATED_OPENER", opener)
+    status, payload, error = discovery._get_json("https://api.alpha.test/models", "secret")
+    assert (status, payload, error) == (302, None, "unsafe-auth-redirect")
+    assert len(opener.requests) == 1
+    assert opener.requests[0].get_header("Authorization") == "Bearer secret"
+
+
+def test_authenticated_discovery_follows_same_origin_https_redirect(monkeypatch) -> None:
+    opener = _RedirectingOpener("/v2/models")
+    monkeypatch.setattr(discovery, "_AUTHENTICATED_OPENER", opener)
+    assert discovery._get_json("https://api.alpha.test/models", "secret") == (
+        200,
+        {"data": []},
+        None,
+    )
+    assert [request.full_url for request in opener.requests] == [
+        "https://api.alpha.test/models",
+        "https://api.alpha.test/v2/models",
+    ]
+
+
+def test_authenticated_discovery_refuses_http_downgrade(monkeypatch) -> None:
+    opener = _RedirectingOpener("http://api.alpha.test/models")
+    monkeypatch.setattr(discovery, "_AUTHENTICATED_OPENER", opener)
+    assert discovery._get_json("https://api.alpha.test/models", "secret") == (
+        302,
+        None,
+        "unsafe-auth-redirect",
+    )
+    assert len(opener.requests) == 1
+
+
+@pytest.mark.parametrize(
+    "location",
+    ("https://api.alpha.test:notaport/models", "https://[::1/models"),
+)
+def test_authenticated_discovery_rejects_malformed_redirect(monkeypatch, location: str) -> None:
+    opener = _RedirectingOpener(location)
+    monkeypatch.setattr(discovery, "_AUTHENTICATED_OPENER", opener)
+    assert discovery._get_json("https://api.alpha.test/models", "secret") == (
+        302,
+        None,
+        "unsafe-auth-redirect",
+    )
+    assert len(opener.requests) == 1
+
+
+def test_authenticated_discovery_rejects_malformed_initial_url() -> None:
+    assert discovery._get_json("https://api.alpha.test:notaport/models", "secret") == (
+        None,
+        None,
+        "invalid-auth-url",
+    )
 
 
 def test_endpoint_keyed_discovery_targets(tmp_path: Path) -> None:
@@ -441,6 +532,7 @@ def test_discovery() -> int:
 
 
 def main() -> int:
+    test_authenticated_discovery_rejects_malformed_initial_url()
     test_stale_targets_prefers_quota_timestamp_and_keeps_missing()
     test_discovery()
 

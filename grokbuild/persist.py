@@ -213,6 +213,30 @@ def quarantine_json(path: Path, reason: str | None = None) -> bool:
     return True
 
 
+def recover_json_under_lock(path: Path, validator) -> tuple[Any | None, float | None]:
+    """Reread and validate a suspect JSON file before quarantining it."""
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    lock_path = path.with_name(path.name + ".lock")
+    with lock_path.open("w", encoding="utf-8") as lock_handle:
+        fcntl.flock(lock_handle, fcntl.LOCK_EX)
+        try:
+            if not path.is_file():
+                return None, None
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+                validator(data)
+                return data, path.stat().st_mtime
+            except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                quarantine_json(path, f"invalid JSON: {type(exc).__name__}")
+            except ValueError as exc:
+                quarantine_json(path, str(exc))
+            except OSError:
+                pass
+            return None, None
+        finally:
+            fcntl.flock(lock_handle, fcntl.LOCK_UN)
+
+
 def atomic_update_json(
     path: Path,
     updater,

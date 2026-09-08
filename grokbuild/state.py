@@ -16,6 +16,7 @@ advisory, never a hard block on its own.
 from __future__ import annotations
 
 import json
+import math
 import time
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -36,6 +37,7 @@ from grokbuild.persist import (
     atomic_update_json,
     _write_marker,
     quarantine_json,
+    recover_json_under_lock,
     sidecar_path,
 )
 
@@ -78,6 +80,25 @@ def _strict_role_status(data: Mapping[str, Any], path: str) -> None:
                 f"{path}.{name}",
                 "expected non-negative integer",
             )
+    if "quota_limit" in data:
+        value = data["quota_limit"]
+        _require(
+            value is None
+            or (isinstance(value, int) and not isinstance(value, bool) and value >= 0),
+            f"{path}.quota_limit",
+            "expected null or non-negative integer",
+        )
+    for name in ("circuit_open_until", "last_seen"):
+        if name not in data:
+            continue
+        value = data[name]
+        _require(
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            and math.isfinite(value),
+            f"{path}.{name}",
+            "expected finite number",
+        )
 
 
 def _strict_track(data: Mapping[str, Any], path: str) -> None:
@@ -138,6 +159,12 @@ def _strict_track(data: Mapping[str, Any], path: str) -> None:
             isinstance(value, (int, float)) and not isinstance(value, bool),
             f"{path}.updated_at",
             "expected number",
+        )
+    if "evidence_policy" in data:
+        _require(
+            data["evidence_policy"] is None or isinstance(data["evidence_policy"], str),
+            f"{path}.evidence_policy",
+            "expected null or string",
         )
 
 
@@ -324,6 +351,7 @@ class ExecutionTrack:
     repair_failures: dict[str, int] = field(default_factory=dict)
     not_found_streaks: dict[str, dict] = field(default_factory=dict)
     failure_reasons: dict[str, str] = field(default_factory=dict)
+    evidence_policy: str | None = None
     # At most one reactive endpoint retry is allowed per stage/member.
     reactive_respawns: dict[str, dict[str, str | int | float]] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
@@ -428,6 +456,11 @@ class ExecutionTrack:
             "repair_failures": dict(self.repair_failures),
             "not_found_streaks": dict(self.not_found_streaks),
             "failure_reasons": dict(self.failure_reasons),
+            **(
+                {"evidence_policy": self.evidence_policy}
+                if self.evidence_policy is not None
+                else {}
+            ),
             **({"reactive_respawns": self.reactive_respawns} if self.reactive_respawns else {}),
             "warnings": list(self.warnings),
             "migrated_dropped": list(self.migrated_dropped),
@@ -551,6 +584,9 @@ class ExecutionTrack:
             repair_failures=repair_failures,
             not_found_streaks=not_found_streaks,
             failure_reasons=failure_reasons,
+            evidence_policy=(
+                str(data["evidence_policy"]) if data.get("evidence_policy") is not None else None
+            ),
             reactive_respawns=reactive_respawns,
             warnings=[str(x) for x in (data.get("warnings") or [])],
             migrated_dropped=[str(x) for x in (data.get("migrated_dropped") or [])],
@@ -765,12 +801,17 @@ class RuntimeState:
         session_id: str | None,
         turn_id: int | None,
         stages: tuple[ExecutionStage, ...],
+        evidence_policy: str | None = None,
     ) -> ExecutionTrack:
         stages = _with_stage_slots(stages)
         track = self.executions.get(decision_id)
         if track is None:
             track = ExecutionTrack(
-                decision_id=decision_id, session_id=session_id, turn_id=turn_id, stages=stages
+                decision_id=decision_id,
+                session_id=session_id,
+                turn_id=turn_id,
+                stages=stages,
+                evidence_policy=evidence_policy,
             )
             self.executions[decision_id] = track
         else:
@@ -778,6 +819,10 @@ class RuntimeState:
                 track.stages = stages
             track.session_id = session_id
             track.turn_id = turn_id
+            if (evidence_policy or "").strip().casefold() == "strict":
+                track.evidence_policy = "strict"
+            elif track.evidence_policy is None:
+                track.evidence_policy = evidence_policy
             track.updated_at = time.time()
         return track
 
@@ -1170,17 +1215,25 @@ def load_state(path: Path | str | None = None) -> RuntimeState:
         state = RuntimeState(source_path=target)
         state.history = LazyDecisionHistory(_decisions_path(target))
         return state
+
+    def recover() -> tuple[Any | None, float | None]:
+        return recover_json_under_lock(
+            target, lambda raw: RuntimeState.from_dict(raw, source_path=target)
+        )
+
     try:
         mtime = target.stat().st_mtime
         data = json.loads(target.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        quarantine_json(target)
-        return RuntimeState(source_path=target, stale=True)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        data, mtime = recover()
+        if data is None:
+            return RuntimeState(source_path=target, stale=True)
     except OSError:
         return RuntimeState(source_path=target, stale=True)
     if not isinstance(data, Mapping):
-        quarantine_json(target)
-        return RuntimeState(source_path=target, stale=True)
+        data, mtime = recover()
+        if data is None:
+            return RuntimeState(source_path=target, stale=True)
     if "history" in data:
         data = atomic_update_json(
             target,
@@ -1191,9 +1244,11 @@ def load_state(path: Path | str | None = None) -> RuntimeState:
         mtime = target.stat().st_mtime
     try:
         state = RuntimeState.from_dict(data, source_path=target)
-    except StateValidationError as exc:
-        quarantine_json(target, str(exc))
-        return RuntimeState(source_path=target, stale=True)
+    except StateValidationError:
+        data, mtime = recover()
+        if data is None:
+            return RuntimeState(source_path=target, stale=True)
+        state = RuntimeState.from_dict(data, source_path=target)
     state.history = LazyDecisionHistory(_decisions_path(target))
     state.stale = (time.time() - mtime) > STALE_AFTER
     state.prune()

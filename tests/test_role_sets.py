@@ -3,9 +3,10 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import replace
 
-from _harness import bootstrap
+from _harness import _seed_hermetic_config, bootstrap
 
 bootstrap()
 
@@ -15,6 +16,14 @@ import grokbuild.hook as hook
 import grokbuild.pipeline as pipeline
 import grokbuild.roles as roles
 from grokbuild.state import RuntimeState
+
+
+def test_hermetic_seed_overrides_empty_host_credential(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("ZAI_API_KEY", "")
+    _seed_hermetic_config(tmp_path)
+    registry = roles.load_registry(tmp_path / "config.toml")
+    assert os.environ["ZAI_API_KEY"] == "hermetic-test-credential"
+    assert roles.credential_present(registry.provider_catalog["glm-5.3"], os.environ)
 
 
 def test_tryout_catalog_models_are_not_role_routable() -> None:

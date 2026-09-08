@@ -73,6 +73,57 @@ def test_unknown_stage_kind_is_forward_compatible(tmp_path: Path) -> None:
     assert track.stages[0].spawnable
 
 
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("quota_limit", "100"),
+        ("circuit_open_until", "tomorrow"),
+        ("circuit_open_until", float("inf")),
+    ],
+)
+def test_malformed_consumed_role_fields_are_typed_and_quarantined(
+    tmp_path: Path, field: str, value: object
+) -> None:
+    data = _v8()
+    data["roles"] = {"implement": {field: value}}
+    with pytest.raises(StateValidationError, match=rf"roles.implement.{field}"):
+        RuntimeState.from_dict(data)
+    target = tmp_path / "state.json"
+    target.write_text(json.dumps(data), encoding="utf-8")
+    assert load_state(target).roles == {}
+    assert list(tmp_path.glob("state.json.corrupt-*"))
+
+
+def test_non_utf8_state_is_quarantined(tmp_path: Path) -> None:
+    target = tmp_path / "state.json"
+    target.write_bytes(b"\xff\xfe")
+    assert load_state(target).stale
+    assert list(tmp_path.glob("state.json.corrupt-*"))
+
+
+def test_validation_race_preserves_newer_valid_state(tmp_path: Path, monkeypatch) -> None:
+    target = tmp_path / "state.json"
+    invalid = {**_v8(), "roles": {"implement": {"quota_limit": "100"}}}
+    valid = {**_v8(), "roles": {"implement": {"quota_limit": 100}}}
+    target.write_text(json.dumps(invalid), encoding="utf-8")
+    original = RuntimeState.from_dict
+    calls = 0
+
+    def interleaved(cls, data, source_path=None):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            target.write_text(json.dumps(valid), encoding="utf-8")
+            raise StateValidationError("roles.implement.quota_limit: invalid")
+        return original(data, source_path=source_path)
+
+    monkeypatch.setattr(RuntimeState, "from_dict", classmethod(interleaved))
+    state = load_state(target)
+    assert state.roles["implement"].quota_limit == 100
+    assert not list(tmp_path.glob("state.json.corrupt-*"))
+    assert json.loads(target.read_text()) == valid
+
+
 def test_atomic_update_shape_failure_quarantines_file(tmp_path: Path) -> None:
     target = tmp_path / "state.json"
     target.write_text(json.dumps({**_v8(), "executions": []}), encoding="utf-8")

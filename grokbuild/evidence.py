@@ -14,7 +14,8 @@ FailureCause = Literal["auth", "environment", "model", "unknown"]
 EVIDENCE_SCHEMA = "evidence-v1"
 _MAX_DETAIL = 500
 _QUOTA_FAILURE_RE = re.compile(
-    r"(?:\b429\b|\btoo many requests\b|"
+    r"(?:\b(?:http|status(?:\s+code)?|response\s+code)\s*[:=]?\s*429\b|"
+    r"\btoo many requests\b|"
     r"\brate[-_ ]limit(?: has| is)?(?: been)? (?:reached|exceeded)\b|"
     r"\b(?:api|session|provider|upstream)[-_ ]error[^\n|]{0,80}\brate[-_ ]limited\b|"
     r"\b(?:quota|(?:monthly )?usage limit)[^\n|]{0,40}(?:exhausted|exceeded|reached)\b|"
@@ -73,8 +74,11 @@ def classify_failure(signal: FailureSignal) -> FailureCause:
         value,
     ):
         return "environment"
-    if is_quota_failure(value) or re.search(
-        r"(?:\bmodel[-_ ](?:upstream|error)\b|\bquota pressured\b)", value
+    if (
+        signal.status == 429
+        or str(signal.status or "").strip() == "429"
+        or is_quota_failure(value)
+        or re.search(r"(?:\bmodel[-_ ](?:upstream|error)\b|\bquota pressured\b)", value)
     ):
         return "model"
     return "unknown"

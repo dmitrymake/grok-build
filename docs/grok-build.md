@@ -70,10 +70,10 @@ python3 -m grokbuild.cli roles
 
 `config/config.toml` is the source of truth for model, role, effort, and verifier pins. Provider metadata and capabilities live in `grokbuild/providers.json`; intent rules and workspace verifier declarations live in `grokbuild/intents.json`.
 
-The installed `grok-route` command and its repository equivalent expose the same CLI:
+The repository launcher exposes the CLI directly (the installer does not place a `grok-route` executable in `PATH`):
 
 ```bash
-grok-route explain "review this change" --json
+./scripts/grok-route explain "review this change" --json
 python3 -m grokbuild.cli state
 python3 -m grokbuild.cli roles
 python3 -m grokbuild.cli profiles
@@ -98,7 +98,7 @@ Every distinguishable role must have a distinguishable effect through effort, le
 
 ## Pipeline and gates
 
-- Every implementation starts with reconnaissance: one `explore` stage for low complexity, two keyed `explore` members for medium complexity, and an additional `explore-thorough` member for high complexity.
+- Every implementation starts with profile-driven reconnaissance: three members for medium complexity, plus two additional members for high complexity. Low-complexity routes use the profile's reduced reconnaissance path.
 - Medium- and high-complexity implementation includes `review-hard` or a review panel. If review is unavailable, the route may use the exact configured deterministic verifier with a warning; without either, it becomes observe-only.
 - Security routing runs analysis → implementation → available review → independent security verification → ordered deterministic verifiers. Without an explicit availability signal for the independent verifier, the route is observe-only with reason `security_verifier_unavailable`.
 - Direct review uses exactly one `review-hard`. Plan or ADR work first completes `plan-hard`; a writable child writes any requested artifact. `expert-rescue` diagnoses but never implements.
@@ -145,4 +145,14 @@ The route suite exercises classification, stage gating, state, visual intake, ro
 
 ## Rollback
 
-Set `GROK_ROUTE_MODE=shadow` for an urgent observe-only rollback. To roll back an installation, restore the previous checkout and rerun `./scripts/install.sh`. Existing sessions must reload hooks or restart after mode or installation changes.
+Set `GROK_ROUTE_MODE=shadow` for an urgent **stage-gating rollback only**. Shadow still denies conductor writes; it does not turn this layer into a write-permissive mode and it does not restore an earlier account configuration.
+
+For a full uninstall, first remove this project's hook registrations from the live Grok configuration, then remove only the repository-owned hook links (`~/.grok/hooks/route.py` and `~/.grok/hooks/route.json`) and repository-owned links under `~/.grok/agents`, `~/.grok/skills`, `~/.grok/rules`, and `~/.grok/routing`. Do not remove account-owned files. The installer creates account-config backups named `~/.grok/config.toml.before-combine-<UTC timestamp>.bak`; inspect the desired backup, compare it with the current file, and selectively restore only settings that belong to this project while preserving unrelated settings and later user changes. For example:
+
+```bash
+ls -t ~/.grok/config.toml.before-combine-*.bak
+cp ~/.grok/config.toml.before-combine-<timestamp>.bak ~/.grok/config.toml.restore-candidate
+# edit/compare the candidate, then merge only the intended project-owned removals
+```
+
+Do not rerun an older installer as a rollback: it preserves account-owned tables and can re-install the project. Existing sessions must reload hooks or restart after mode or installation changes.

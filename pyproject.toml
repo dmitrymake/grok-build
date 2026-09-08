@@ -13,7 +13,7 @@ classifiers = ["Programming Language :: Python :: 3 :: Only", "Environment :: Co
 
 [project.optional-dependencies]
 test = ["pytest", "jsonschema"]
-dev = ["ruff==0.9.10"]
+dev = ["ruff==0.9.10", "pytest", "jsonschema"]
 
 [project.scripts]
 grok-route = "grokbuild.cli:main"

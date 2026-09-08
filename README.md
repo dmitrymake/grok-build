@@ -31,7 +31,7 @@ Modes are `static` (classify only), `shadow` (classify and persist without stage
 
 ## Quickstart
 
-Requirements are POSIX with `fcntl`, Python 3.11 or newer, and the Grok CLI.
+Requirements are POSIX with `fcntl`, Python 3.11 or newer, and the Grok CLI. Permission preferences are account-owned and are never installed by this script; the installer does not propagate the repository's `[ui]` settings.
 
 ```bash
 ./scripts/install.sh
@@ -54,7 +54,7 @@ git clone https://github.com/dmitrymake/grok-build.git
 cd grok-build
 python -m venv .venv
 . .venv/bin/activate
-pip install -e .[dev]
+pip install -e ".[dev]"
 ```
 
 Run the test suite, shell verifiers, documentation projection check, and lint:
@@ -102,11 +102,11 @@ The provider-role matrix below is derived from [`grokbuild/providers.json`](grok
 
 Together binds both opt-in challengers to `openai/gpt-oss-120b`; the retained `openai/gpt-oss-20b` catalog entry is an unbound economy alternative. The `gpt-oss-120b` choice follows AgentJudgeBench tool-selection alignment (88.7% versus 70.7% for 20B), with negligible cost delta at challenger rarity. The retained `Qwen/QwQ-32B` catalog entry is dedicated-endpoint-only because its serverless service was retired by the vendor.
 
-`subscription_class` is a preference classification used for reporting and model-endpoint selection; current routing uses the `@commandcode` second endpoints: `qwen3.8-max` and `kimi-k3` balance=rotate across OpenCode Go and Command Code, while `deepseek-v4-pro`, `deepseek-v4-flash`, `minimax-m3`, and `glm-5.3-flash` use Command Code as an ordered reserve. A model whose catalog entry declares `balance = "rotate"` spreads sessions across its endpoints, so those endpoints must belong to providers of the same class (peer pools, as `opencode` and `commandcode` both are); its endpoint-level `primary`/`reserve` labels then record declaration order rather than priority. Under `balance = "ordered"` the declared primary is tried first and a later endpoint may not belong to a higher class than an earlier one. `tests/test_subscription_class.py` enforces both rules. It is orthogonal to Minimum, Recommended, and Full, which describe availability. The `minimax` / `minimax-m3` pair is the primary visual-provider sample; the configured model-level endpoint pairs are described above. This provider-level metadata is declarative and used for reporting only.
+`subscription_class` is a preference classification used for reporting and model-endpoint selection; current routing uses the `@commandcode` second endpoints: `qwen3.8-max` and `kimi-k3` balance=rotate across OpenCode Go and Command Code, while `deepseek-v4-pro` and `deepseek-v4-flash` rotate across those same peer providers. Their subscription consumption is shared rather than a guaranteed OpenCode-only reserve. `minimax-m3` and `glm-5.3-flash` use Command Code as an ordered reserve. A model whose catalog entry declares `balance = "rotate"` spreads sessions across its endpoints, so those endpoints must belong to providers of the same class (peer pools, as `opencode` and `commandcode` both are); its endpoint-level `primary`/`reserve` labels then record declaration order rather than priority. Under `balance = "ordered"` the declared primary is tried first and a later endpoint may not belong to a higher class than an earlier one. `tests/test_subscription_class.py` enforces both rules. It is orthogonal to Minimum, Recommended, and Full, which describe availability. The `minimax` / `minimax-m3` pair is the primary visual-provider sample; the configured model-level endpoint pairs are described above. This provider-level metadata is declarative and used for reporting only.
 
 The derived levels are:
 
-- **Minimum — Codex subscription:** `explore`, `explore-thorough`, `plan`, `plan-hard`, `implement`, `implement-cheap`, `implement-standard`, `implement-strong`, `implement-hard`, `planner-strong`, `review`, `visual-intake-deep`, and `consilium-arbiter`. This is the smallest credential set where implementation and planning intents have the Codex stages available; full end-to-end completion with internal review also requires Zai for `review-hard`, plus deterministic gates.
+- **Minimum — Codex subscription:** `explore`, `explore-thorough`, `plan`, `plan-hard`, `implement`, `implement-cheap`, `implement-standard`, `implement-strong`, `implement-hard`, `planner-strong`, `review`, `visual-intake-deep`, and `consilium-arbiter`. This is the smallest credential set where implementation and planning intents have the Codex stages available; full end-to-end completion with internal review also requires Zai for `review-hard`, plus deterministic gates. Codex bindings additionally require a running Responses-compatible local proxy at `http://127.0.0.1:1456/v1` and its `CODEX_SUB_PROXY_BEARER`; `~/.codex/auth.json` alone is not sufficient. `scripts/install.sh` neither installs nor starts that proxy. Check readiness with `curl -fsS -H "Authorization: Bearer $CODEX_SUB_PROXY_BEARER" http://127.0.0.1:1456/v1/models` (or the proxy's documented health endpoint) before relying on this tier. The availability check may pass on OAuth-file presence even when proxy-backed spawns cannot connect.
 - **Recommended — Codex + Zai + OpenCode Go:** all Minimum roles plus `review-hard`, `implement-ops`, `security`, `consilium-analyst`, `implement-overflow`, `implement-cheap-fallback`, and `consilium-challenger`. This supplies the operations and security roles, overflow and last-resort fallback, consilium provider diversity, and the primary conductor provider.
 - **Full — Recommended + xai session, Command Code, MiniMax, Together AI, and minimax credential:** all configured roles, adding `review-independent`, `expert-rescue`, `security-verify`, `visual-intake`, the opt-in judge challengers, and the remaining delegated roles; xai still requires its explicit availability signal.
 
@@ -244,7 +244,7 @@ The command is `grok-route` (or `python3 -m grokbuild.cli`). Read-only commands 
 
 ## Security model
 
-Every disk write crosses the redaction boundary. Prompt anti-injection scoring compares a dual stripped/raw view: harness reminder blocks are stripped for one view while trusted user text is retained in the other, and the conservative scoring merge prevents an embedded reminder from hiding a strong intent. Deterministic verifiers are workspace-aware and accept only their exact configured argv. The shell read-only classifier `is_readonly_shell` is a cooperative heuristic, not a sandbox. This layer gates a consenting conductor; it does not contain a malicious one. Zero-write is the hard invariant. Credential values are never read or emitted; only credential presence is checked.
+Every disk write crosses the redaction boundary. Prompt anti-injection scoring compares a dual stripped/raw view: harness reminder blocks are stripped for one view while trusted user text is retained in the other, and the conservative scoring merge prevents an embedded reminder from hiding a strong intent. Deterministic verifiers are workspace-aware and accept only their exact configured argv. The shell read-only classifier `is_readonly_shell` is a cooperative heuristic, not a sandbox. This layer gates a consenting conductor; it does not contain a malicious one. Zero-write is the hard invariant. Availability checks are presence-only, but discovery and availability refresh read credential values and send authenticated requests to the configured provider endpoints (with redirect hardening). `scripts/install.sh` also reads the live `~/.grok/config.toml` to merge account-owned settings and creates backups under `~/.grok/config.toml.before-combine-*.bak`; that file may contain credentials. Credential values are not printed or provisioned by this project. Restrict environment/session-file permissions, proxy access, and `~/.grok` permissions according to the provider and Grok CLI controls.
 
 ## Requirements and limitations
 

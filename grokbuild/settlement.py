@@ -23,6 +23,7 @@ from grokbuild.payloads import (
     retrieval_transcript_text,
     spawn_result_status,
     spawn_tool_input,
+    structural_task_outputs,
     task_ids,
     terminal_background_ack,
     tool_result_raw,
@@ -394,9 +395,13 @@ def _evidence_policy(route: dict) -> str | None:
 
 
 def _persisted_evidence_policy(decision_id: str) -> str | None:
-    """Return the evidence policy recorded with a bound decision."""
+    """Return the evidence policy recorded with a bound execution track."""
     try:
-        history = list(load_state(default_state_path()).history)
+        state = load_state(default_state_path())
+        track = state.get_execution(decision_id)
+        if track is not None and track.evidence_policy is not None:
+            return track.evidence_policy
+        history = list(state.history)
         record = next(
             (
                 item
@@ -479,6 +484,8 @@ def _evidence_seam(
     )
     spec = find_task_spec(bound_decision, stage_key)
     result = parse_task_result(text)
+    if result is not None and result.task_id != task_id:
+        result = None
     observation = Observation()
     if spec is not None and (policy or "").strip().casefold() == "strict":
         track = _load_execution(bound_decision)
@@ -1034,6 +1041,10 @@ def handle_post_tool(data: dict, spec: dict) -> None:
     if tool == "get_command_or_subagent_output":
         ids = task_ids(data)
         aggregate_status = _retrieval_result_status(data, requested_ids=ids)
+        result_text = retrieval_result_text(data, _retrieval_transcript_text)
+        result_sections = structural_task_outputs(tool_result_raw(data))
+        if not result_sections:
+            result_sections = retrieval_task_sections(result_text)
         task_statuses = _retrieval_task_statuses(data, requested_ids=ids)
         reported_statuses = {
             task_id: task_statuses[task_id] for task_id in ids if task_id in task_statuses
@@ -1131,7 +1142,11 @@ def handle_post_tool(data: dict, spec: dict) -> None:
                         decision_id=decision_id,
                         task_id=task_id,
                         legacy_success=(status == "success"),
-                        text=retrieval_result_text(data, _retrieval_transcript_text),
+                        text=(
+                            result_sections.get(task_id)
+                            if len(ids) > 1
+                            else result_sections.get(task_id) or result_text
+                        ),
                     ),
                     threshold=threshold,
                     cooldown=cooldown,

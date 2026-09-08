@@ -26,7 +26,7 @@ def _seed_hermetic_config(grok_home: Path) -> None:
     for spec in config.get("model", {}).values():
         env_key = spec.get("env_key") if isinstance(spec, dict) else None
         if isinstance(env_key, str) and env_key:
-            os.environ.setdefault(env_key, "hermetic-test-credential")
+            os.environ[env_key] = "hermetic-test-credential"
 
 
 # Test modules import routing globals during collection, before fixtures run.

@@ -19,6 +19,7 @@ import json
 import os
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
@@ -188,25 +189,63 @@ def load_targets(
     return targets, warnings
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+_AUTHENTICATED_OPENER = urllib.request.build_opener(_NoRedirect())
+
+
+def _origin(url: str) -> tuple[str, str, int | None]:
+    parsed = urllib.parse.urlsplit(url)
+    scheme = parsed.scheme.casefold()
+    port = parsed.port if parsed.port is not None else (443 if scheme == "https" else None)
+    return scheme, (parsed.hostname or "").casefold(), port
+
+
 def _get_json(url: str, bearer: str) -> tuple[int | None, Any, str | None]:
-    """Authorized GET returning parsed JSON. Errors sanitized to class/code."""
-    # Some provider edges (CDN WAFs) 403 the default Python-urllib user agent.
-    request = urllib.request.Request(
-        url,
-        headers={
-            "Authorization": f"Bearer {bearer}",
-            "Accept": "application/json",
-            "User-Agent": "grok-build-discovery/1",
-        },
-    )
+    """Authorized GET returning parsed JSON without forwarding credentials."""
+    current = url
     try:
-        with urllib.request.urlopen(request, timeout=FETCH_TIMEOUT) as response:
-            status = int(getattr(response, "status", 200))
-            raw = response.read(MAX_BODY_BYTES)
-    except urllib.error.HTTPError as exc:
-        return int(exc.code), None, f"http-{exc.code}"
-    except (urllib.error.URLError, TimeoutError, OSError) as exc:
-        return None, None, f"network:{type(exc).__name__}"
+        current_origin = _origin(current)
+    except ValueError:
+        return None, None, "invalid-auth-url"
+    if current_origin[0] != "https":
+        return None, None, "insecure-auth-url"
+    for _redirect in range(4):
+        request = urllib.request.Request(
+            current,
+            headers={
+                "Authorization": f"Bearer {bearer}",
+                "Accept": "application/json",
+                "User-Agent": "grok-build-discovery/1",
+            },
+        )
+        try:
+            with _AUTHENTICATED_OPENER.open(request, timeout=FETCH_TIMEOUT) as response:
+                status = int(getattr(response, "status", 200))
+                raw = response.read(MAX_BODY_BYTES)
+                break
+        except urllib.error.HTTPError as exc:
+            if int(exc.code) not in {301, 302, 303, 307, 308}:
+                return int(exc.code), None, f"http-{exc.code}"
+            location = exc.headers.get("Location") if exc.headers is not None else None
+            if not location:
+                return int(exc.code), None, "redirect-missing-location"
+            try:
+                redirected = urllib.parse.urljoin(current, location)
+                redirected_origin = _origin(redirected)
+            except ValueError:
+                return int(exc.code), None, "unsafe-auth-redirect"
+            if redirected_origin[0] != "https" or redirected_origin != current_origin:
+                return int(exc.code), None, "unsafe-auth-redirect"
+            current = redirected
+            current_origin = redirected_origin
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            return None, None, f"network:{type(exc).__name__}"
+    else:
+        return None, None, "too-many-redirects"
     try:
         return status, json.loads(raw.decode("utf-8")), None
     except (UnicodeDecodeError, ValueError):

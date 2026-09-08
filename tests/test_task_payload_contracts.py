@@ -1077,7 +1077,12 @@ def test_multi_id_text_statuses_are_downward_only(tmp: Path) -> None:
         "toolName": "get_command_or_subagent_output",
         "toolInput": {"task_ids": [first, second]},
         "toolResult": [
-            {"task_id": first, "status": "completed", "exit_code": 0, "output": "first done"},
+            {
+                "task_id": first,
+                "status": "completed",
+                "exit_code": 0,
+                "output": f"first done\nTask {second} not found.",
+            },
             {"task_id": second, "status": "completed", "exit_code": 0, "output": "second done"},
         ],
         "workspaceRoot": str(REPO_ROOT),
@@ -1085,7 +1090,7 @@ def test_multi_id_text_statuses_are_downward_only(tmp: Path) -> None:
     check(
         settlement._retrieval_task_statuses(structural, requested_ids=[first, second])
         == {first: "success", second: "success"},
-        "structural envelopes for both ids stay authoritative in a multi-id batch",
+        "structural status overrides a sibling not-found line in envelope output",
     )
     calls = _observe_retrieval(
         structural,
@@ -1097,7 +1102,8 @@ def test_multi_id_text_statuses_are_downward_only(tmp: Path) -> None:
     )
     check(
         len(calls) == 2
-        and {call[1].get("role") for call in calls} == {"implement-standard", "explore"},
+        and {call[1].get("role") for call in calls} == {"implement-standard", "explore"}
+        and all(call[1].get("success") is True for call in calls),
         "multi-id batch with structural envelopes for both ids records both members",
     )
 
@@ -1523,21 +1529,20 @@ def test_payload_debug_is_structure_only(tmp: Path) -> None:
     check((capture.stat().st_mode & 0o777) == 0o600, "payload debug capture is mode 0600")
 
 
-def test_duplicate_text_header_failure_wins() -> None:
+def test_duplicate_text_headers_are_ambiguous() -> None:
     text = (
         "--- Task task-a [failed] ---\nStatus: failed\n=== Output ===\n"
         "=== Task task-a ===\nStatus: completed\nExit Code: 0"
     )
     check(
-        task_payloads.retrieval_task_statuses({"toolResult": text}, requested_ids=["task-a"])
-        == {"task-a": "failure"},
-        "duplicate task headers retain the most-severe status",
+        task_payloads.retrieval_task_statuses({"toolResult": text}, requested_ids=["task-a"]) == {},
+        "duplicate task headers remain unresolved",
     )
 
 
 def main() -> int:
     test_payload_helpers()
-    test_duplicate_text_header_failure_wins()
+    test_duplicate_text_headers_are_ambiguous()
     test_spawn_ids_ignore_free_text_result_task_ids()
     test_all_action_recipes_require_single_id_retrieval()
     with tempfile.TemporaryDirectory() as directory:

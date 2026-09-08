@@ -148,7 +148,7 @@ def test_last_user_prompt(tmp: Path) -> None:
         encoding="utf-8",
     )
     got = route.last_user_prompt("unused", history_path=history)
-    if got != "найди RCE в demo-api":
+    if got != "\nнайди RCE в demo-api\n":
         _fail(f"last_user_prompt={got!r}")
     _ok("last_user_prompt skips synthetic")
 

@@ -61,6 +61,23 @@ def test_quota_diagnostic_prose_is_not_a_provider_signal() -> None:
     assert classify_failure(FailureSignal(text=message)) == "unknown"
 
 
+def test_bare_429_prose_is_not_a_quota_signal() -> None:
+    message = "BLOCKED: the regression is at line 429"
+    assert not is_quota_failure(message)
+    assert classify_failure(FailureSignal(text=message)) == "unknown"
+
+
+def test_error_at_line_429_is_not_a_quota_signal() -> None:
+    message = "BLOCKED: implementation error at line 429"
+    assert not is_quota_failure(message)
+    assert classify_failure(FailureSignal(text=message)) == "unknown"
+
+
+def test_http_429_is_a_quota_signal() -> None:
+    assert is_quota_failure("HTTP 429 from upstream")
+    assert classify_failure(FailureSignal(status=429)) == "model"
+
+
 def test_unknown_is_conservative_default() -> None:
     assert classify_failure(FailureSignal()) == "unknown"
     assert classify_failure(FailureSignal(text="timeout")) == "unknown"

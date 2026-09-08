@@ -16,6 +16,7 @@ from grokbuild.evidence import (
     persist_evidence,
 )
 from grokbuild.persist import append_jsonl, atomic_update_json
+from grokbuild.policy import load_profiles
 from grokbuild.verifiers import is_verifier_command
 from grokbuild.remediation import record_remediation_attempt
 from grokbuild.state import (
@@ -357,6 +358,14 @@ def ensure_turn(
     return int(RuntimeState.from_dict(new_data).turns.get(session_id, 0))
 
 
+def _decision_evidence_policy(decision: Mapping[str, Any]) -> str | None:
+    try:
+        profile = load_profiles().get(str(decision.get("profile") or "default"))
+    except (OSError, ValueError):
+        return None
+    return getattr(profile, "evidence_policy", None) if profile is not None else None
+
+
 def record_decision_tx(
     path: Path | str | None, decision_dict: Mapping[str, Any], role: str | None
 ) -> None:
@@ -377,9 +386,12 @@ def record_decision_tx(
         decision_id = str(decision_dict.get("decision_id") or "")
         session_id = decision_dict.get("session_id")
         turn_id = decision_dict.get("turn_id")
+        evidence_policy = _decision_evidence_policy(decision_dict)
         track = state.get_execution(decision_id)
         if track is None:
-            state.set_execution(decision_id, session_id, turn_id, stages)
+            track = state.set_execution(
+                decision_id, session_id, turn_id, stages, evidence_policy=evidence_policy
+            )
         elif track.stages != stages:
             runtime_stages = tuple(
                 stage
@@ -399,6 +411,11 @@ def record_decision_tx(
             track.session_id = session_id
             track.turn_id = turn_id
             track.updated_at = time.time()
+        if track is not None:
+            if (evidence_policy or "").strip().casefold() == "strict":
+                track.evidence_policy = "strict"
+            elif track.evidence_policy is None:
+                track.evidence_policy = evidence_policy
         return None
 
     _transaction(

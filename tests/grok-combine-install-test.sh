@@ -44,8 +44,8 @@ mkdir -p "$HOME"
 REPO_DIR="$PWD" bash scripts/install.sh >"$fake/install.log" 2>&1 || {
   cat "$fake/install.log" >&2; fail "first install failed";
 }
-[ -L "$HOME/.grok/config.toml" ] || fail "expected live config symlink"
-[ "$(readlink "$HOME/.grok/config.toml")" = "$PWD/config/config.toml" ] || fail "config source mismatch"
+[ -f "$HOME/.grok/config.toml" ] && [ ! -L "$HOME/.grok/config.toml" ] \
+  || fail "expected account-owned regular live config"
 for path in hooks/route.py hooks/route.json routing/providers.json routing/barrier_lenses.json routing/conductor.py \
   routing/payloads.py routing/stats.py routing/discovery.py routing/visual_intake.py \
   routing/visual_cache.py routing/corpus_sync.py routing/fixtures/workloads.json \
@@ -79,6 +79,8 @@ assert roles["implement-hard"]["model"] == "gpt-6-astra"
 assert roles["implement-hard"]["reasoning_effort"] == "max"
 assert roles["security-verify"]["model"] == "grok-4.6"
 assert data["visual_intake"]["schema_version"] == 1
+assert "ui" not in data
+assert "permission_mode" not in Path(sys.argv[2]).read_text(encoding="utf-8")
 assert Path(sys.argv[3]).is_symlink() or Path(sys.argv[3]).is_file()
 assert load_barrier_lenses(sys.argv[3])["research"]
 
@@ -119,8 +121,8 @@ PY
 # Second run is idempotent and does not create a config backup.
 cp "$HOME/.grok/config.toml" "$fake/config.first"
 REPO_DIR="$PWD" bash scripts/install.sh >"$fake/install2.log" 2>&1 || fail "second install failed"
-cmp -s "$HOME/.grok/config.toml" "$fake/config.first" || fail "symlinked config changed on second install"
-! find "$HOME/.grok" -maxdepth 1 -name 'config.toml.before-combine-*.bak' | grep -q . || fail "symlink config created a backup"
+cmp -s "$HOME/.grok/config.toml" "$fake/config.first" || fail "regular config changed on second install"
+! find "$HOME/.grok" -maxdepth 1 -name 'config.toml.before-combine-*.bak' | grep -q . || fail "fresh config created a backup"
 
 # A checkout path containing spaces remains usable.
 space_dir="$fake/with space/grok-build"
@@ -162,6 +164,7 @@ REPO_DIR="$PWD" bash scripts/install.sh >"$fake2/install.log" 2>&1 || {
 [ -f "$HOME/.grok/config.toml" ] && [ ! -L "$HOME/.grok/config.toml" ] || fail "regular config was replaced"
 grep -q '^auto_update = true$' "$HOME/.grok/config.toml" || fail "CLI table was not preserved"
 grep -q '^privacy_banner_acked = "test"$' "$HOME/.grok/config.toml" || fail "privacy table was not preserved"
+! grep -q '^\[ui\]$' "$HOME/.grok/config.toml" || fail "account config gained repository UI preferences"
 grep -q 'api_key = "old-value"' "$HOME/.grok/config.toml" || fail "live managed model was overwritten"
 ls "$HOME/.grok"/config.toml.before-combine-*.bak >/dev/null 2>&1 || fail "regular config was not backed up"
 [ -L "$HOME/.grok/hooks/route.py" ] || fail "valid merged config did not install hooks"
