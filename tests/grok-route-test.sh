@@ -37,8 +37,7 @@ python3 tests/test_subscription_class.py
 python3 tests/test_workloads.py
 python3 tests/test_corpus_sync.py
 python3 tests/test_verify_debt_repro.py
-python3 tests/test_eval_composition.py
-python3 tests/test_eval_run_record.py
+# Pytest-only modules run in the CI test job, which owns the pytest dependency.
 PYTHONPATH=. python3 tests/test_hook_hardening_followup.py
 PYTHONPATH=. python3 tests/test_panel_followup.py
 PYTHONPATH=. python3 tests/test_provider_hygiene_followup.py
