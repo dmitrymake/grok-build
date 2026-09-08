@@ -991,9 +991,13 @@ class RoleRegistry:
         return issues
 
 
+def _grok_home() -> Path:
+    configured = os.environ.get("GROK_HOME")
+    return Path(configured).expanduser() if configured else Path.home() / ".grok"
+
+
 def default_config_path() -> Path:
-    grok_home = Path(os.environ.get("GROK_HOME", Path.home() / ".grok"))
-    return grok_home / "config.toml"
+    return _grok_home() / "config.toml"
 
 
 def resolve_config_path(config_path: Path | str | None = None) -> Path | None:
@@ -1177,7 +1181,7 @@ def discover_agent_files(grok_home: Path | str | None = None) -> dict[str, dict[
     even when the live account catalog cannot discover it).
     """
     if grok_home is None:
-        grok_home = Path(os.environ.get("GROK_HOME", Path.home() / ".grok"))
+        grok_home = _grok_home()
     else:
         grok_home = Path(grok_home)
     directory = grok_home / "agents"

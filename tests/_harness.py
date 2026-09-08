@@ -6,9 +6,11 @@ import contextlib
 import io
 import json
 import os
+import shutil
 from pathlib import Path
 import sys
 import tempfile
+import tomllib
 from io import BytesIO
 from typing import Any, Callable
 
@@ -106,10 +108,27 @@ def plant_session(
     )
 
 
+def _seed_hermetic_config(grok_home: Path) -> None:
+    """Seed the isolated home with repository config; CI must not use account config."""
+    grok_home.mkdir(parents=True, exist_ok=True)
+    config_path = REPO_ROOT / "config" / "config.toml"
+    shutil.copy2(config_path, grok_home / "config.toml")
+    shutil.copytree(REPO_ROOT / "agents", grok_home / "agents", dirs_exist_ok=True)
+    # CI is hermetic by design: presence-only dummy credentials enable routing
+    # metadata checks without reading or emitting account credentials.
+    config = tomllib.loads(config_path.read_text(encoding="utf-8"))
+    for spec in config.get("model", {}).values():
+        env_key = spec.get("env_key") if isinstance(spec, dict) else None
+        if isinstance(env_key, str) and env_key:
+            os.environ.setdefault(env_key, "hermetic-test-credential")
+
+
 def setup_environment(tmp: Path) -> None:
-    os.environ["GROK_HOME"] = str(tmp / "grok")
+    grok_home = tmp / "grok"
+    os.environ["GROK_HOME"] = str(grok_home)
     os.environ["XDG_STATE_HOME"] = str(tmp / "state")
     os.environ["XDG_CACHE_HOME"] = str(tmp / "cache")
+    _seed_hermetic_config(grok_home)
     (tmp / "state" / "grok-route").mkdir(parents=True, exist_ok=True)
     for key in list(os.environ):
         if key.startswith("GROK_ROUTE_"):
@@ -129,7 +148,7 @@ def run_standalone(main: Callable[[], Any]) -> None:
         for key in list(os.environ):
             if key.startswith("GROK_ROUTE_"):
                 os.environ.pop(key, None)
-        (root / "grok-home").mkdir()
+        _seed_hermetic_config(root / "grok-home")
         try:
             from grokbuild import conductor, gate, transcript
 

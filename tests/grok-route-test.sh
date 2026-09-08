@@ -12,6 +12,9 @@ export GROK_HOME
 export XDG_STATE_HOME="$XDG_SANDBOX/state"
 export XDG_CACHE_HOME="$XDG_SANDBOX/cache"
 mkdir -p "$XDG_STATE_HOME" "$XDG_CACHE_HOME"
+# CI is hermetic by design: seed the isolated home from this checkout, never the account.
+cp config/config.toml "$GROK_HOME/config.toml"
+cp -R agents "$GROK_HOME/agents"
 trap 'rm -rf "$GROK_HOME" "$XDG_SANDBOX"' EXIT
 
 python3 tests/test_classify.py
