@@ -71,7 +71,7 @@ The harness remains the subject; judge/verifier/router are functions.
 ## Artifact-only multi-model judge (feature)
 
 Purpose: select the best of multiple candidate results while minimizing model-identity,
-style, verbosity, self-preference, position, and hallucination bias. **Core invariant:
+style, verbosity, self-preference, position, and fabrication bias. **Core invariant:
 "judges select artifacts, never agents."**
 
 Placement in grok-build: VERIFICATION layer, on top of R2 typed evidence (the "canonical
