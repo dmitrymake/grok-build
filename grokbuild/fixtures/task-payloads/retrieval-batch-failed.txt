@@ -1,0 +1,4 @@
+=== Multi-wait (wait_all) ===
+--- Task dddddddd-dddd-dddd-dddd-dddddddddddd [failed] ---
+Command: [subagent:explore] failed worker
+Exit Code: 1

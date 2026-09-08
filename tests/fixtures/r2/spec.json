@@ -1,0 +1,13 @@
+{
+  "schema": "r2-task-spec-v1",
+  "contract_version": 1,
+  "decision_id": "d-1",
+  "session_id": "01a0063b-a2dd-7bf2-aafd-4a66cf8377cc",
+  "stage_key": "impl",
+  "role": "implement-standard",
+  "path_scope": ["src/"],
+  "artifacts": ["src/app.py"],
+  "checks": ["verify/0"],
+  "criteria": [{"kind": "check_passed", "expected": "verify/0"}],
+  "created_at": "2026-08-31T00:00:00Z"
+}

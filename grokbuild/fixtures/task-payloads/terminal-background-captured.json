@@ -1,0 +1,32 @@
+{
+  "hookEventName": "post_tool_use",
+  "sessionId": "01a0063b-a2dd-7bf2-aafd-4a66cf8377cc",
+  "cwd": "/home/user/project",
+  "workspaceRoot": "/home/user/project",
+  "timestamp": "2026-08-25T13:45:14.837914528+00:00",
+  "transcriptPath": "/home/user/.grok/sessions/project/session/updates.jsonl",
+  "permissionMode": "bypassPermissions",
+  "toolName": "run_terminal_command",
+  "toolUseId": "call_terminal_background",
+  "toolInput": {
+    "command": "sleep 1",
+    "timeout": 0,
+    "description": "Start a background payload-contract probe.",
+    "background": true
+  },
+  "toolResult": {
+    "type": "BackgroundTaskStarted",
+    "task_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "task_type": "bash",
+    "output_file": "/tmp/grok-task.log",
+    "status": "running",
+    "command": "sleep 1",
+    "summary": "Background command started",
+    "retrieval_hint": "retrieve by task id",
+    "pid": 12345
+  },
+  "toolInputTruncated": false,
+  "toolResultTruncated": false,
+  "isBackgrounded": false,
+  "subagentType": "implement-hard"
+}

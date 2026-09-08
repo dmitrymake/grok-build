@@ -1,0 +1,8 @@
+=== Task dddddddd-dddd-dddd-dddd-dddddddddddd ===
+Command: [subagent:explore] ...
+Status: completed
+Duration: 1s
+Exit Code: 2
+
+=== Output ===
+completed output

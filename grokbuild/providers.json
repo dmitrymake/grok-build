@@ -1,0 +1,479 @@
+{
+  "version": 2,
+  "note": "Single source of truth for the Grok Build provider pool and capability metadata. Model IDs are catalog/config-verified against config.toml [model.*] by roles.py; this file only layers tier/credential/auth metadata, never a secret.",
+  "providers": {
+    "commandcode": {
+      "label": "Command Code",
+      "auth": "api_key",
+      "credential_env": "COMMANDCODE_API_KEY",
+      "require_availability_signal": false,
+      "models": {
+        "gemini-3.7-flash": {
+          "tier": "conductor",
+          "cost": 0.25,
+          "latency": 0.35,
+          "quality_prior": 0.72,
+          "capabilities": {
+            "text": true,
+            "vision": null,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": null,
+            "logprobs": null
+          },
+          "family": "gemini-3.7"
+        }
+      },
+      "subscription_class": "reserve"
+    },
+    "minimax": {
+      "label": "MiniMax",
+      "auth": "api_key",
+      "credential_env": "MINIMAX_API_KEY",
+      "require_availability_signal": false,
+      "models": {
+        "minimax-m3": {
+          "tier": "standard",
+          "cost": 0.3,
+          "latency": 0.4,
+          "quality_prior": 0.6,
+          "balance": "ordered",
+          "capabilities": {
+            "text": true,
+            "vision": true,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": null,
+            "logprobs": null
+          },
+          "endpoints": [
+            {
+              "provider": "minimax",
+              "model_binding": "minimax-m3",
+              "subscription_class": "primary",
+              "auth": "api_key",
+              "credential_env": "MINIMAX_API_KEY",
+              "require_availability_signal": false
+            },
+            {
+              "provider": "commandcode",
+              "model_binding": "minimax-m3@commandcode",
+              "subscription_class": "reserve",
+              "auth": "api_key",
+              "credential_env": "COMMANDCODE_API_KEY",
+              "require_availability_signal": false
+            }
+          ],
+          "family": "minimax-m3"
+        },
+        "mimo-2.5": {
+          "tier": "cheap",
+          "cost": 0.1,
+          "latency": 0.2,
+          "quality_prior": 0.45,
+          "capabilities": {
+            "text": true,
+            "vision": false,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": null,
+            "logprobs": null
+          },
+          "family": "mimo-2.5"
+        }
+      },
+      "subscription_class": "primary"
+    },
+    "opencode": {
+      "label": "OpenCode Go",
+      "auth": "api_key",
+      "credential_env": "OPENCODE_GO_API_KEY",
+      "require_availability_signal": false,
+      "models": {
+        "deepseek-v4-pro": {
+          "tier": "overflow",
+          "cost": 0.3,
+          "latency": 0.4,
+          "quality_prior": 0.62,
+          "balance": "rotate",
+          "capabilities": {
+            "text": true,
+            "vision": null,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": null,
+            "logprobs": null
+          },
+          "endpoints": [
+            {
+              "provider": "opencode",
+              "model_binding": "deepseek-v4-pro",
+              "subscription_class": "primary",
+              "auth": "api_key",
+              "credential_env": "OPENCODE_GO_API_KEY",
+              "require_availability_signal": false
+            },
+            {
+              "provider": "commandcode",
+              "model_binding": "deepseek-v4-pro@commandcode",
+              "subscription_class": "reserve",
+              "auth": "api_key",
+              "credential_env": "COMMANDCODE_API_KEY",
+              "require_availability_signal": false
+            }
+          ],
+          "family": "deepseek-v4"
+        },
+        "deepseek-v4-flash": {
+          "tier": "cheap",
+          "cost": 0.1,
+          "latency": 0.2,
+          "quality_prior": 0.48,
+          "balance": "rotate",
+          "capabilities": {
+            "text": true,
+            "vision": null,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": null,
+            "logprobs": null
+          },
+          "endpoints": [
+            {
+              "provider": "opencode",
+              "model_binding": "deepseek-v4-flash",
+              "subscription_class": "primary",
+              "auth": "api_key",
+              "credential_env": "OPENCODE_GO_API_KEY",
+              "require_availability_signal": false
+            },
+            {
+              "provider": "commandcode",
+              "model_binding": "deepseek-v4-flash@commandcode",
+              "subscription_class": "reserve",
+              "auth": "api_key",
+              "credential_env": "COMMANDCODE_API_KEY",
+              "require_availability_signal": false
+            }
+          ],
+          "family": "deepseek-v4"
+        },
+        "kimi-k3": {
+          "tier": "cheap",
+          "cost": 0.2,
+          "latency": 0.35,
+          "quality_prior": 0.5,
+          "balance": "rotate",
+          "capabilities": {
+            "text": true,
+            "vision": null,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": null,
+            "logprobs": null
+          },
+          "endpoints": [
+            {
+              "provider": "opencode",
+              "model_binding": "kimi-k3",
+              "subscription_class": "primary",
+              "auth": "api_key",
+              "credential_env": "OPENCODE_GO_API_KEY",
+              "require_availability_signal": false
+            },
+            {
+              "provider": "commandcode",
+              "model_binding": "kimi-k3@commandcode",
+              "subscription_class": "reserve",
+              "auth": "api_key",
+              "credential_env": "COMMANDCODE_API_KEY",
+              "require_availability_signal": false
+            }
+          ],
+          "family": "kimi-k3"
+        },
+        "qwen3.8-max": {
+          "tier": "standard",
+          "cost": 0.35,
+          "latency": 0.45,
+          "quality_prior": 0.55,
+          "balance": "rotate",
+          "capabilities": {
+            "text": true,
+            "vision": null,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": null,
+            "logprobs": null
+          },
+          "endpoints": [
+            {
+              "provider": "opencode",
+              "model_binding": "qwen3.8-max",
+              "subscription_class": "primary",
+              "auth": "api_key",
+              "credential_env": "OPENCODE_GO_API_KEY",
+              "require_availability_signal": false
+            },
+            {
+              "provider": "commandcode",
+              "model_binding": "qwen3.8-max@commandcode",
+              "subscription_class": "reserve",
+              "auth": "api_key",
+              "credential_env": "COMMANDCODE_API_KEY",
+              "require_availability_signal": false
+            }
+          ],
+          "family": "qwen3.8"
+        }
+      },
+      "quota_probe": "opencode",
+      "subscription_class": "reserve"
+    },
+    "codex": {
+      "label": "Codex subscription pool",
+      "auth": "codex_oauth",
+      "credential_path": "~/.codex/auth.json",
+      "require_availability_signal": false,
+      "models": {
+        "gpt-5.6-luna": {
+          "tier": "cheap",
+          "cost": 0.2,
+          "latency": 0.3,
+          "quality_prior": 0.5,
+          "capabilities": {
+            "text": true,
+            "vision": null,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": null,
+            "logprobs": null
+          },
+          "family": "gpt-5.6"
+        },
+        "gpt-5.6-terra": {
+          "tier": "standard",
+          "cost": 0.5,
+          "latency": 0.5,
+          "quality_prior": 0.7,
+          "capabilities": {
+            "text": true,
+            "vision": true,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": null,
+            "logprobs": null
+          },
+          "family": "gpt-5.6"
+        },
+        "gpt-5.6-sol": {
+          "tier": "hard",
+          "cost": 0.9,
+          "latency": 0.8,
+          "quality_prior": 0.9,
+          "capabilities": {
+            "text": true,
+            "vision": null,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": null,
+            "logprobs": null
+          },
+          "family": "gpt-5.6"
+        },
+        "gpt-6-astra": {
+          "tier": "frontier",
+          "cost": 1.0,
+          "latency": 0.9,
+          "quality_prior": 0.95,
+          "capabilities": {
+            "text": true,
+            "vision": true,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": true,
+            "logprobs": null
+          },
+          "family": "gpt-6"
+        }
+      },
+      "quota_probe": "codex",
+      "subscription_class": "primary"
+    },
+    "zai": {
+      "label": "Z.AI",
+      "auth": "api_key",
+      "credential_env": "ZAI_API_KEY",
+      "require_availability_signal": false,
+      "models": {
+        "glm-5.3": {
+          "tier": "conductor",
+          "cost": 0.35,
+          "latency": 0.45,
+          "quality_prior": 0.72,
+          "capabilities": {
+            "text": true,
+            "vision": null,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": null,
+            "logprobs": null
+          },
+          "family": "glm-5.3"
+        },
+        "glm-5.3-flash": {
+          "tier": "flash",
+          "cost": 0.12,
+          "latency": 0.35,
+          "quality_prior": 0.68,
+          "balance": "ordered",
+          "capabilities": {
+            "text": true,
+            "vision": true,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": null,
+            "logprobs": null
+          },
+          "endpoints": [
+            {
+              "provider": "zai",
+              "model_binding": "glm-5.3-flash",
+              "subscription_class": "primary",
+              "auth": "api_key",
+              "credential_env": "ZAI_API_KEY",
+              "require_availability_signal": false
+            },
+            {
+              "provider": "commandcode",
+              "model_binding": "glm-5.3-flash@commandcode",
+              "subscription_class": "reserve",
+              "auth": "api_key",
+              "credential_env": "COMMANDCODE_API_KEY",
+              "require_availability_signal": false
+            }
+          ],
+          "family": "glm-5.3"
+        }
+      },
+      "subscription_class": "primary"
+    },
+    "xai": {
+      "label": "grok-4.6 / host session (session auth)",
+      "auth": "session",
+      "require_availability_signal": true,
+      "models": {
+        "grok-4.6": {
+          "tier": "spare",
+          "cost": 0.0,
+          "latency": 0.5,
+          "quality_prior": 0.5,
+          "capabilities": {
+            "text": true,
+            "vision": null,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": null,
+            "logprobs": null
+          },
+          "family": "grok-4.6"
+        }
+      },
+      "credential_path": "~/.grok/auth.json",
+      "subscription_class": "primary"
+    },
+    "together": {
+      "label": "Together AI",
+      "auth": "api_key",
+      "credential_env": "TOGETHER_API_KEY",
+      "require_availability_signal": false,
+      "models": {
+        "gpt-oss-120b": {
+          "tier": "challenger",
+          "cost": 0.15,
+          "latency": 0.45,
+          "quality_prior": 0.72,
+          "capabilities": {
+            "text": true,
+            "vision": false,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": true,
+            "logprobs": null
+          },
+          "endpoints": [
+            {
+              "provider": "together",
+              "model_binding": "gpt-oss-120b",
+              "subscription_class": "primary",
+              "auth": "api_key",
+              "credential_env": "TOGETHER_API_KEY",
+              "require_availability_signal": false
+            }
+          ],
+          "family": "gpt-oss"
+        },
+        "qwen-qwq-32b": {
+          "tier": "challenger",
+          "cost": 1.2,
+          "latency": 0.55,
+          "quality_prior": 0.68,
+          "capabilities": {
+            "text": true,
+            "vision": false,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": true,
+            "logprobs": null
+          },
+          "family": "qwq-32b",
+          "description": "Together AI serverless retired by vendor; usable only via a dedicated endpoint id."
+        },
+        "gpt-oss-20b": {
+          "tier": "challenger",
+          "cost": 0.05,
+          "latency": 0.45,
+          "quality_prior": 0.7,
+          "capabilities": {
+            "text": true,
+            "vision": false,
+            "audio": false,
+            "video": false,
+            "tools": true,
+            "structured_output": true,
+            "logprobs": null
+          },
+          "endpoints": [
+            {
+              "provider": "together",
+              "model_binding": "gpt-oss-20b",
+              "subscription_class": "primary",
+              "auth": "api_key",
+              "credential_env": "TOGETHER_API_KEY",
+              "require_availability_signal": false
+            }
+          ],
+          "family": "gpt-oss",
+          "description": "Together AI serverless open-model endpoint for the opt-in structural challenger."
+        }
+      },
+      "subscription_class": "primary"
+    }
+  }
+}

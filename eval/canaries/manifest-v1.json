@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "battery_version": "judge-canaries-v1",
+  "frozen": true,
+  "cases": [
+    {"id": "position-swap", "kind": "position_bias", "expected": "ABSTAIN"},
+    {"id": "plausible-deterministic-fail", "kind": "non_overridable_gate", "expected": "REJECT"},
+    {"id": "reference-leak", "kind": "evidence_isolation", "expected": "REJECT"},
+    {"id": "malformed-schema", "kind": "response_schema", "expected": "ABSTAIN"},
+    {"id": "false-consensus", "kind": "adversarial_impossible", "expected": "FAIL"}
+  ]
+}

@@ -1,0 +1,8 @@
+=== Task aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa ===
+Command: [subagent:explore] ...
+Status: completed
+Duration: ...
+Exit Code: 0
+
+=== Output ===
+completed terminal output placeholder

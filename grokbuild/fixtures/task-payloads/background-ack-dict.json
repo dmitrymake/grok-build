@@ -1,0 +1,1 @@
+{"content": "Subagent started in background.\nsubagent_id: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa\ntype: explore\ndescription: recon/0\n\nWhen you need its result, use get_command_or_subagent_output with task_ids=[\"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa\"] with a positive timeout_ms.\n"}

@@ -1,0 +1,5 @@
+=== Multi-wait (wait_all) ===
+--- Task bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb [running] ---
+Command: [subagent:explore] running one
+--- Task cccccccc-cccc-cccc-cccc-cccccccccccc [running] ---
+Command: [subagent:explore] running two

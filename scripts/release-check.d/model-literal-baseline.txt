@@ -1,0 +1,24 @@
+# Baseline entries: repo-relative Python path, literal, and observed count.
+grokbuild/artifact_judge.py gpt-5.6-luna 1
+grokbuild/compose.py gpt-5.6-sol 1
+grokbuild/conductor.py gemini-3.7-flash 2
+grokbuild/conductor.py glm-5.3-flash 2
+grokbuild/conductor.py grok-4.6 2
+grokbuild/decision.py glm-5.3-flash 1
+grokbuild/gate.py glm-5.3 2
+grokbuild/gate.py gpt-5.6-luna 5
+grokbuild/gate.py gpt-5.6-sol 5
+grokbuild/gate.py gpt-5.6-terra 1
+grokbuild/gate.py grok-4.6 3
+grokbuild/pipeline.py gemini-3.7-flash 2
+grokbuild/render_docs.py gemini-3.7-flash 2
+grokbuild/render_docs.py glm-5.3 1
+grokbuild/render_docs.py gpt-6-astra 1
+grokbuild/render_docs.py grok-4.6 4
+grokbuild/roles.py glm-5.3 5
+grokbuild/roles.py gpt-5.6-luna 6
+grokbuild/roles.py gpt-5.6-sol 9
+grokbuild/roles.py gpt-5.6-terra 1
+grokbuild/roles.py grok-4.6 4
+grokbuild/roles.py qwen3.8 2
+grokbuild/roles.py qwen3.8-max 1

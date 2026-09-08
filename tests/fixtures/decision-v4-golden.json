@@ -1,0 +1,64 @@
+{
+  "version": 4,
+  "telemetry_generation": 1,
+  "decision_id": "golden-v4",
+  "policy_id": "default",
+  "policy_version": 1,
+  "repo_id": "repo",
+  "turn_id": 4,
+  "prompt_key": "prompt",
+  "intent": "implement",
+  "task_class": "code",
+  "complexity": "medium",
+  "risk": "low",
+  "role": "implement-standard",
+  "model": "gpt-5.6-luna",
+  "reasoning_effort": "max",
+  "how": "classified",
+  "block_tools": [
+    "danger"
+  ],
+  "matches": {
+    "intent": [
+      "implement"
+    ]
+  },
+  "strong": [
+    "implement"
+  ],
+  "has_strong": true,
+  "reason": "matched",
+  "score": 0.8,
+  "confidence": 0.9,
+  "second_opinion": null,
+  "execution": [],
+  "candidates": [],
+  "fallbacks": [],
+  "score_breakdown": null,
+  "features": null,
+  "profile": "default",
+  "mode": "dynamic",
+  "override": null,
+  "preference": null,
+  "write_policy": "observe",
+  "role_spawnable": true,
+  "execution_valid": true,
+  "role_available": null,
+  "circuit_open": false,
+  "role_quota_used": null,
+  "allowed": true,
+  "enforce": false,
+  "would_deny_edits": false,
+  "would_block_stop": false,
+  "warnings": [],
+  "source": "test",
+  "current_model": "glm-5.3-flash",
+  "session_id": "session",
+  "event": "resolve",
+  "prompt_chars": 42,
+  "stage_trace": {
+    "gate": "open"
+  },
+  "observed_at": "2026-08-31T00:00:00Z",
+  "created_at": "2026-08-31T00:00:00Z"
+}

@@ -1,0 +1,77 @@
+# POSIX-only: fcntl is required; Windows is unsupported. Python >=3.11 is required for tomllib.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Ruff
+        # Ruff 0.9.10 is pinned because newer default rule sets are incompatible.
+        run: python -m pip install ruff==0.9.10
+      - run: ruff check .
+      - run: ruff format --check .
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      # pyproject.toml sets pythonpath=["."], so pytest alone is sufficient.
+      - run: python -m pip install pytest
+      - run: python3 -m pytest -q
+
+  script-runner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: ./tests/grok-route-test.sh
+
+  combine-install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: bash tests/grok-combine-install-test.sh
+
+  render-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # The checkout is on Python's import path; no package installation is needed.
+      - run: python3 -m grokbuild.render_docs check --config config/config.toml --providers grokbuild/providers.json --intents grokbuild/intents.json --prose grokbuild/contract_prose.json
+
+  release-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Gate 6 scans git rev-list --all and git grep per commit. Shallow clones
+          # silently under-scan and can pass while missing unfetched history; full
+          # history is a correctness requirement, not an optimization.
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: ./scripts/release-check.sh

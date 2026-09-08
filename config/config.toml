@@ -1,0 +1,603 @@
+[marketplace]
+default_skills_installs_purged = true
+official_marketplace_auto_installed = true
+
+[[marketplace.sources]]
+name = "xAI Official"
+git = "https://github.com/xai-org/plugin-marketplace.git"
+
+[cli]
+installer = "internal"
+auto_update = true
+
+[ui]
+max_thoughts_width = 120
+fork_secondary_model = "gpt-5.6-luna"
+yolo = false
+compact_mode = false
+theme = "auto"
+permission_mode = "always-approve"
+screen_mode = "fullscreen"
+
+[privacy]
+privacy_banner_acked = "2026-08-16T00:44:46Z"
+
+[routing.verifiers]
+"$REPO_ROOT" = [
+    "./tests/grok-route-test.sh",
+    "./tests/grok-combine-install-test.sh",
+]
+
+[models]
+default = "glm-5.3-flash"
+web_search = "grok-4.6"
+default_reasoning_effort = "high"
+
+[model."gemini-3.7-flash"]
+model = "google/gemini-3.7-flash"
+base_url = "https://api.commandcode.ai/provider/v1"
+name = "Gemini 3.7 Flash (Command Code)"
+description = "Command Code provider API. Conductor fallback and advisory second opinion. OpenAI chat completions."
+api_backend = "chat_completions"
+env_key = "COMMANDCODE_API_KEY"
+context_window = 1048576
+
+[memory]
+enabled = true
+
+[memory.initial_injection]
+enabled = true
+
+[visual_intake]
+mode = "auto"
+detail = "auto"
+schema_version = 1
+role_version = "1"
+
+[subagents.models]
+explore = "gpt-5.6-luna"
+plan = "gpt-5.6-sol"
+general-purpose = "gpt-5.6-luna"
+
+[subagents.roles.visual-intake]
+description = "Read-only visual intake: analyze images into structured context for the conductor. Does not route or implement."
+model = "minimax-m3"
+default_capability_mode = "read-only"
+autonomy = "standard"
+fallback = ["visual-intake-deep"]
+
+[subagents.roles.visual-intake-deep]
+description = "Read-only high-detail visual intake for comparisons, small diffs, dense diagrams, and low-confidence reinspection."
+model = "gpt-5.6-terra"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.explore]
+description = "Read-only reconnaissance for scoped repository mapping."
+model = "gpt-5.6-luna"
+reasoning_effort = "high"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.explore-thorough]
+description = "Deep architecture-wide read-only reconnaissance."
+model = "gpt-5.6-luna"
+reasoning_effort = "max"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.researcher]
+description = "Deep multi-source research and synthesis lead."
+model = "gpt-5.6-sol"
+reasoning_effort = "max"
+default_capability_mode = "read-only"
+autonomy = "broad"
+
+[subagents.roles.researcher-analyst]
+description = "Alternative-perspective research analysis."
+model = "glm-5.3"
+reasoning_effort = "max"
+default_capability_mode = "read-only"
+autonomy = "broad"
+
+[subagents.roles.researcher-challenger]
+description = "Adversarial verification of research findings."
+model = "grok-4.6"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+# OLD routing layer: barrier composition arrives with the phase-H migration.
+
+[subagents.roles.implement]
+description = "Backward-compatible alias for the standard implementation role."
+model = "gpt-5.6-luna"
+reasoning_effort = "max"
+default_capability_mode = "all"
+autonomy = "guided"
+
+[subagents.roles.implement-cheap]
+description = "Low-scope, low-risk implementation."
+model = "gpt-5.6-luna"
+reasoning_effort = "high"
+default_capability_mode = "all"
+autonomy = "guided"
+
+[subagents.roles.implement-standard]
+description = "Standard implementation for everyday coding work."
+model = "gpt-5.6-luna"
+reasoning_effort = "max"
+default_capability_mode = "all"
+autonomy = "guided"
+
+[subagents.roles.implement-strong]
+description = "Strong implementation for medium-complexity work."
+model = "gpt-5.6-sol"
+reasoning_effort = "max"
+default_capability_mode = "all"
+autonomy = "standard"
+
+[subagents.roles.implement-hard]
+description = "Hard implementation for complex or high-risk work."
+model = "gpt-6-astra"
+reasoning_effort = "max"
+default_capability_mode = "all"
+autonomy = "broad"
+
+[subagents.roles.implement-ops]
+description = "Operations, firmware, destructive, or complex physical implementation."
+model = "glm-5.3"
+reasoning_effort = "high"
+default_capability_mode = "all"
+autonomy = "standard"
+
+[subagents.roles.implement-overflow]
+risk_ceiling = "medium"
+description = "Cross-provider overflow implementation after primary tiers are unavailable."
+model = "deepseek-v4-pro"
+reasoning_effort = "high"
+tier = "overflow"
+default_capability_mode = "all"
+autonomy = "standard"
+
+[subagents.roles.implement-cheap-fallback]
+description = "Last-resort writable fallback for low-risk, explicitly testable work with a known verifier."
+model = "deepseek-v4-flash"
+reasoning_effort = "high"
+default_capability_mode = "all"
+autonomy = "guided"
+
+[subagents.roles.plan]
+description = "Backward-compatible alias for hard read-only planning."
+model = "gpt-6-astra"
+reasoning_effort = "max"
+default_capability_mode = "read-only"
+autonomy = "broad"
+
+[subagents.roles.plan-hard]
+description = "Hard planning, read-only."
+model = "gpt-6-astra"
+reasoning_effort = "max"
+default_capability_mode = "read-only"
+autonomy = "broad"
+
+[subagents.roles.review]
+description = "Backward-compatible alias for internal read-only review."
+model = "gpt-5.6-sol"
+reasoning_effort = "xhigh"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.review-hard]
+description = "Internal read-only review for medium/high-complexity work."
+model = "glm-5.3"
+reasoning_effort = "max"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.review-independent]
+description = "Independent adversarial read-only review with explicit availability verification."
+model = "grok-4.6"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.expert-rescue]
+description = "Independent read-only diagnosis and rescue."
+model = "deepseek-v4-pro"
+reasoning_effort = "high"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.consilium-analyst]
+description = "Fresh-eyes read-only failure analysis from telemetry and state."
+model = "glm-5.3"
+reasoning_effort = "max"
+default_capability_mode = "read-only"
+autonomy = "broad"
+
+[subagents.roles.consilium-challenger]
+description = "Adversarial read-only cross-examination of repair attempts and hypotheses."
+model = "deepseek-v4-pro"
+reasoning_effort = "high"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.consilium-arbiter]
+description = "Read-only synthesis of a repair verdict and concrete plan."
+model = "gpt-5.6-sol"
+reasoning_effort = "xhigh"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.security]
+description = "Read-only cybersecurity analysis."
+model = "glm-5.3"
+reasoning_effort = "max"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.security-verify]
+description = "Independent post-implementation read-only security verification with explicit OAuth availability verification."
+model = "grok-4.6"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[model."glm-5.3"]
+model = "glm-5.3"
+base_url = "https://api.z.ai/api/coding/paas/v4"
+api_backend = "chat_completions"
+name = "GLM-5.3 (Z.AI plan)"
+description = "Z.AI GLM-5.3 Coding Plan subscription (~1M); the top model of the 5.3 line (Zhipu ships only glm-5.3 and glm-5.3-flash - there is no max variant). Alias renamed from glm-5.3-std 2026-09-01. Roles must use this, not a pay-per-token binding. Live-verified >200K input 2026-08-17."
+env_key = "ZAI_API_KEY"
+context_window = 1000000
+
+[model."glm-5.3-flash"]
+model = "glm-5.3-flash"
+base_url = "https://api.z.ai/api/coding/paas/v4"
+api_backend = "chat_completions"
+name = "GLM-5.3 Flash (Z.AI plan)"
+description = "Primary conductor; natively multimodal; 3× Coding Plan quota vs std; released 2026-08-26."
+env_key = "ZAI_API_KEY"
+context_window = 1000000
+
+
+[subagents.roles.explore-risk]
+model = "minimax-m3"
+reasoning_effort = "high"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.planner-a]
+description = "Independent read-only task decomposition, first of three distinct model families."
+model = "deepseek-v4-pro"
+reasoning_effort = "high"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.planner-b]
+description = "Independent read-only task decomposition, second of three distinct model families."
+model = "glm-5.3"
+reasoning_effort = "high"
+default_capability_mode = "read-only"
+autonomy = "broad"
+
+[subagents.roles.planner-c]
+description = "Independent read-only task decomposition, third family, so the market measures disagreement rather than provider redundancy."
+model = "gpt-5.6-luna"
+reasoning_effort = "high"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.planner-strong]
+description = "Optional strong read-only planner seat for the expanded planner market."
+model = "gpt-5.6-sol"
+reasoning_effort = "max"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.plan-comparator]
+description = "Reads the competing decompositions and reports agreement. Produces a signal; it never selects a plan."
+model = "gemini-3.7-flash"
+reasoning_effort = "high"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.criterion-judge]
+description = "Evaluates one contract criterion against structured evidence and marks only disputed criteria for escalation."
+model = "glm-5.3-flash"
+reasoning_effort = "high"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.judge-primary]
+description = "Compares candidate artifacts pairwise on evidence. Sees no model, provider or author identity."
+model = "gemini-3.7-flash"
+reasoning_effort = "high"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.judge-independent]
+description = "Second independent comparison of the same pair in reversed order, from a different provider."
+model = "glm-5.3-flash"
+reasoning_effort = "high"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.judge-disagreement]
+description = "Adjudicates only when the two cheap judges disagree after a discriminating test."
+model = "gpt-5.6-luna"
+reasoning_effort = "high"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.judge-frontier-code]
+description = "Frontier adjudication for code artifacts, bought only after cheaper comparison fails to resolve."
+model = "grok-4.6"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.judge-frontier-general]
+description = "Frontier adjudication for non-code artifacts, bought only after cheaper comparison fails to resolve."
+model = "gpt-5.6-sol"
+reasoning_effort = "xhigh"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.judge-challenger-agentic]
+description = "Opt-in agentic challenger."
+model = "gpt-oss-120b"
+reasoning_effort = "low"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.judge-challenger-structural]
+description = "Opt-in structural challenger."
+model = "gpt-oss-20b"
+reasoning_effort = "low"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.verifier-planner]
+description = "States what evidence would settle an undecided comparison. Requests the experiment; never runs it."
+model = "glm-5.3-flash"
+reasoning_effort = "high"
+default_capability_mode = "read-only"
+autonomy = "standard"
+
+[subagents.roles.frontier-resolver]
+description = "Rare meta-planner: frames an ambiguous task, decomposes it and names the invariants. Never executes the work."
+model = "grok-4.6"
+default_capability_mode = "read-only"
+autonomy = "standard"
+fallback = ["frontier-resolver-standby"]
+
+[subagents.roles.frontier-resolver-standby]
+description = "Standby binding for the frontier resolver when its primary is unavailable. Same meta-planning duty."
+model = "gpt-5.6-sol"
+reasoning_effort = "xhigh"
+default_capability_mode = "read-only"
+autonomy = "standard"
+[model."gpt-oss-120b"]
+model = "openai/gpt-oss-120b"
+base_url = "https://api.together.xyz/v1"
+api_backend = "chat_completions"
+name = "GPT-OSS-120B (Together AI)"
+description = "Together AI serverless open-model endpoint for the opt-in agentic challenger."
+env_key = "TOGETHER_API_KEY"
+context_window = 131072
+
+[model."gpt-oss-20b"]
+model = "openai/gpt-oss-20b"
+base_url = "https://api.together.xyz/v1"
+api_backend = "chat_completions"
+name = "GPT-OSS-20B (Together AI)"
+description = "Together AI serverless open-model endpoint for the opt-in structural challenger."
+env_key = "TOGETHER_API_KEY"
+context_window = 131072
+
+[model."qwen-qwq-32b"]
+model = "Qwen/QwQ-32B"
+base_url = "https://api.together.xyz/v1"
+api_backend = "chat_completions"
+name = "QwQ-32B (Together AI dedicated endpoint)"
+description = "Together AI serverless retired by vendor; usable only via a dedicated endpoint id."
+env_key = "TOGETHER_API_KEY"
+context_window = 131072
+
+[model.deepseek-v4-pro]
+model = "deepseek-v4-pro"
+base_url = "https://opencode.ai/zen/go/v1"
+name = "DeepSeek V4 Pro (OpenCode Go)"
+description = "OpenCode Go workhorse. Native ~1M context; no separate [1m] id."
+env_key = "OPENCODE_GO_API_KEY"
+context_window = 1000000
+
+[model.deepseek-v4-flash]
+model = "deepseek-v4-flash"
+base_url = "https://opencode.ai/zen/go/v1"
+name = "DeepSeek V4 Flash (OpenCode Go)"
+description = "OpenCode Go fast/cheap model. Native ~1M context. Last-resort writable fallback only."
+env_key = "OPENCODE_GO_API_KEY"
+context_window = 1000000
+
+[model."deepseek-v4-pro@commandcode"]
+model = "deepseek/deepseek-v4-pro"
+base_url = "https://api.commandcode.ai/provider/v1"
+api_backend = "chat_completions"
+name = "DeepSeek V4 Pro (Command Code)"
+description = "Reserve endpoint for deepseek-v4-pro: providers.json lists it as subscription_class=reserve, selected when the OpenCode Go primary is quota-pressured, credential-less or circuit-held. Verified in /provider/v1/models 2026-08-31."
+env_key = "COMMANDCODE_API_KEY"
+context_window = 1000000
+
+[model."deepseek-v4-flash@commandcode"]
+model = "deepseek/deepseek-v4-flash"
+base_url = "https://api.commandcode.ai/provider/v1"
+api_backend = "chat_completions"
+name = "DeepSeek V4 Flash (Command Code)"
+description = "Reserve endpoint for deepseek-v4-flash, same failover contract as the pro reserve. Verified in /provider/v1/models 2026-08-31."
+env_key = "COMMANDCODE_API_KEY"
+context_window = 1000000
+
+[model."qwen3.8-max@commandcode"]
+model = "Qwen/Qwen3.8-Max"
+base_url = "https://api.commandcode.ai/provider/v1"
+api_backend = "chat_completions"
+name = "Qwen3.8 Max (Command Code)"
+description = "Second endpoint of the qwen3.8-max rotate pair (balance=rotate in providers.json): sessions spread across OpenCode Go and Command Code by a stable session hash. Verified in /provider/v1/models 2026-08-31."
+env_key = "COMMANDCODE_API_KEY"
+context_window = 1000000
+
+[model."kimi-k3@commandcode"]
+model = "moonshotai/Kimi-K3"
+base_url = "https://api.commandcode.ai/provider/v1"
+api_backend = "chat_completions"
+name = "Kimi K3 (Command Code)"
+description = "Second endpoint of the kimi-k3 rotate pair, same contract as the qwen pair. Verified in /provider/v1/models 2026-08-31."
+env_key = "COMMANDCODE_API_KEY"
+context_window = 1000000
+
+[model."minimax-m3@commandcode"]
+model = "MiniMaxAI/MiniMax-M3"
+base_url = "https://api.commandcode.ai/provider/v1"
+api_backend = "chat_completions"
+name = "MiniMax M3 (Command Code)"
+description = "Reserve only: minimax-m3 is balance=ordered, the dedicated MiniMax subscription is always spent first. Verified in /provider/v1/models 2026-08-31."
+env_key = "COMMANDCODE_API_KEY"
+context_window = 1000000
+
+[model."glm-5.3-flash@commandcode"]
+model = "z-ai/glm-5.3-flash"
+base_url = "https://api.commandcode.ai/provider/v1"
+api_backend = "chat_completions"
+name = "GLM-5.3 Flash (Command Code)"
+description = "Reserve only: glm-5.3-flash is balance=ordered, the dedicated Z.AI Coding Plan is always spent first. Role bindings only; the conductor chain is not touched by endpoint balance. Verified in /provider/v1/models 2026-08-31."
+env_key = "COMMANDCODE_API_KEY"
+context_window = 1000000
+
+[model."qwen3.8-max"]
+model = "qwen3.8-max"
+base_url = "https://opencode.ai/zen/go/v1"
+name = "Qwen3.8 Max (OpenCode Go)"
+description = "OpenCode Go Qwen 3.8 Max. Native ~1M context; no separate [1m] id."
+env_key = "OPENCODE_GO_API_KEY"
+context_window = 1000000
+
+[model.kimi-k3]
+model = "kimi-k3"
+base_url = "https://opencode.ai/zen/go/v1"
+name = "Kimi K3 (OpenCode Go)"
+description = "Moonshot Kimi K3 via OpenCode Go. Native 1M context. Burns Go quota faster than DeepSeek."
+env_key = "OPENCODE_GO_API_KEY"
+context_window = 1000000
+
+[model.minimax-m3]
+model = "MiniMax-M3"
+base_url = "https://api.minimax.io/v1"
+name = "MiniMax M3 (MiniMax plan)"
+description = "Direct MiniMax Plus subscription; former conductor parked pending a later MiniMax version; remains the visual-intake model; not via OpenCode. OpenAI-compatible: anthropic/v1 stream omits signature on thinking blocks and Grok 1.0.4 fails to deserialize"
+api_backend = "chat_completions"
+env_key = "MINIMAX_API_KEY"
+context_window = 1000000
+
+[model."mimo-2.5"]
+model = "MiniMax-M2.5"
+base_url = "https://api.minimax.io/v1"
+name = "MiniMax M2.5 (MiniMax plan)"
+description = "cheap pool for mass text/extraction/classification workloads; availability per live probe"
+api_backend = "chat_completions"
+env_key = "MINIMAX_API_KEY"
+context_window = 200000
+
+[model."gpt-5.6-sol"]
+model = "gpt-5.6-sol"
+base_url = "http://127.0.0.1:1456/v1"
+name = "GPT-5.6 Sol (Codex sub)"
+# picker naming scheme: "<Model> (<Pool>)"; pools: Codex sub | Z.AI plan | MiniMax plan | OpenCode Go | Command Code
+description = "ChatGPT/Codex subscription. Hard thinking."
+api_backend = "responses"
+env_key = "CODEX_SUB_PROXY_BEARER"
+context_window = 272000
+
+[model."gpt-6-astra"]
+model = "gpt-6-astra"
+base_url = "http://127.0.0.1:1456/v1"
+api_backend = "responses"
+env_key = "CODEX_SUB_PROXY_BEARER"
+name = "GPT-6-Astra"
+description = "OpenAI frontier model on the ChatGPT-subscription codex pipe; frontier tier."
+context_window = 1050000
+
+[model."gpt-5.6-terra"]
+model = "gpt-5.6-terra"
+base_url = "http://127.0.0.1:1456/v1"
+name = "GPT-5.6 Terra (Codex sub)"
+description = "ChatGPT/Codex subscription. Manual model (vision)."
+api_backend = "responses"
+env_key = "CODEX_SUB_PROXY_BEARER"
+context_window = 272000
+
+[model."gpt-5.6-luna"]
+model = "gpt-5.6-luna"
+base_url = "http://127.0.0.1:1456/v1"
+name = "GPT-5.6 Luna (Codex sub)"
+description = "ChatGPT/Codex subscription. Fast/cheap OpenAI; conductor fallback and advisory second opinion."
+api_backend = "responses"
+env_key = "CODEX_SUB_PROXY_BEARER"
+context_window = 272000
+
+[routing.conductor]
+default = "glm-5.3-flash"
+fallback = "gemini-3.7-flash"
+emergency = "grok-4.6"
+candidates = [
+    "glm-5.3-flash",
+    "gemini-3.7-flash",
+    "grok-4.6",
+]
+
+[routing.second_opinion]
+model = "gemini-3.7-flash"
+provider = "commandcode"
+
+[corpus.taxonomy]
+analytics = [
+    "transform",
+    "pipeline",
+    "charge",
+    "sql",
+]
+fw = [
+    "firmware",
+    "vpn",
+    "gateway",
+    "router",
+    "relay",
+]
+df = [
+    "grok",
+    "routing",
+    "harness",
+    "dotfiles",
+    "hook",
+]
+sec = [
+    "cve",
+    "пентест",
+    "уязвим",
+    "security",
+    "утечк",
+]
+gb = [
+    "project",
+    "workload",
+    "service",
+    "dataset",
+    "workflow",
+]
+
+[telemetry]
+otel_enabled = true
+otel_metrics_exporter = "otlp"
+otel_logs_exporter = "otlp"
+otel_endpoint = "http://localhost:4318"
+otel_protocol = "http/protobuf"
+otel_log_user_prompts = false

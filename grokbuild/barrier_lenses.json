@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "barriers": {
+    "recon": [
+      {
+        "role": "explore",
+        "reason": "structure/map lens"
+      },
+      {
+        "role": "explore",
+        "reason": "callers/tests lens"
+      },
+      {
+        "role": "explore-thorough",
+        "reason": "architecture/dependencies lens"
+      },
+      {
+        "role": "explore",
+        "reason": "data-flow/state lens"
+      },
+      {
+        "role": "explore",
+        "reason": "config/build/docs lens"
+      },
+      {
+        "role": "explore-thorough",
+        "reason": "history/regression lens"
+      }
+    ],
+    "recon-advisor": [
+      {
+        "role": "explore-risk",
+        "reason": "bounded risk flags with one-minute verification checks"
+      }
+    ],
+    "review": [
+      {"role": "review-hard", "reason": "correctness/regression lens"},
+      {"role": "review-independent", "reason": "adversarial/abuse lens"},
+      {"role": "expert-rescue", "reason": "independent diagnosis lens"}
+    ],
+    "research": [
+      {
+        "role": "researcher",
+        "reason": "deep synthesis lead"
+      },
+      {
+        "role": "researcher-analyst",
+        "reason": "alternative-perspective analysis"
+      },
+      {
+        "role": "researcher",
+        "reason": "prior-art/landscape lens"
+      },
+      {
+        "role": "researcher-challenger",
+        "reason": "adversarial verification"
+      },
+      {
+        "role": "researcher-analyst",
+        "reason": "counterfactual/robustness lens"
+      }
+    ],
+    "planner-market": [
+      {
+        "role": "planner-a",
+        "reason": "independent decomposition (primary provider)"
+      },
+      {
+        "role": "planner-b",
+        "reason": "independent decomposition (redundant provider, same family)"
+      },
+      {
+        "role": "planner-c",
+        "reason": "independent decomposition (different model family)"
+      }
+    ]
+  }
+}

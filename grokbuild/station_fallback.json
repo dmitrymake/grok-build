@@ -1,0 +1,166 @@
+{
+  "visual-intake": [
+    "minimax-m3",
+    null
+  ],
+  "visual-intake-deep": [
+    "gpt-5.6-terra",
+    null
+  ],
+  "security": [
+    "glm-5.3",
+    "max"
+  ],
+  "security-verify": [
+    "grok-4.6",
+    null
+  ],
+  "implement": [
+    "gpt-5.6-luna",
+    "max"
+  ],
+  "implement-cheap": [
+    "gpt-5.6-luna",
+    "high"
+  ],
+  "implement-standard": [
+    "gpt-5.6-luna",
+    "max"
+  ],
+  "implement-hard": [
+    "gpt-6-astra",
+    "max"
+  ],
+  "implement-ops": [
+    "glm-5.3",
+    "high"
+  ],
+  "implement-overflow": [
+    "deepseek-v4-pro",
+    "high"
+  ],
+  "implement-cheap-fallback": [
+    "deepseek-v4-flash",
+    "high"
+  ],
+  "review": [
+    "gpt-5.6-sol",
+    "xhigh"
+  ],
+  "review-hard": [
+    "glm-5.3",
+    "max"
+  ],
+  "review-independent": [
+    "grok-4.6",
+    null
+  ],
+  "expert-rescue": [
+    "deepseek-v4-pro",
+    "high"
+  ],
+  "explore": [
+    "gpt-5.6-luna",
+    "high"
+  ],
+  "explore-thorough": [
+    "gpt-5.6-luna",
+    "max"
+  ],
+  "explore-risk": [
+    "minimax-m3",
+    "high"
+  ],
+  "plan": [
+    "gpt-6-astra",
+    "max"
+  ],
+  "plan-hard": [
+    "gpt-6-astra",
+    "max"
+  ],
+  "researcher": [
+    "gpt-5.6-sol",
+    "max"
+  ],
+  "researcher-analyst": [
+    "glm-5.3",
+    "max"
+  ],
+  "researcher-challenger": [
+    "grok-4.6",
+    null
+  ],
+  "implement-strong": [
+    "gpt-5.6-sol",
+    "max"
+  ],
+  "consilium-analyst": [
+    "glm-5.3",
+    "max"
+  ],
+  "consilium-challenger": [
+    "deepseek-v4-pro",
+    "high"
+  ],
+  "consilium-arbiter": [
+    "gpt-5.6-sol",
+    "xhigh"
+  ],
+  "planner-a": [
+    "deepseek-v4-pro",
+    "high"
+  ],
+  "planner-b": [
+    "glm-5.3",
+    "high"
+  ],
+  "planner-c": [
+    "gpt-5.6-luna",
+    "high"
+  ],
+  "planner-strong": [
+    "gpt-5.6-sol",
+    "max"
+  ],
+  "plan-comparator": [
+    "gemini-3.7-flash",
+    "high"
+  ],
+  "criterion-judge": [
+    "glm-5.3-flash",
+    "high"
+  ],
+  "judge-primary": [
+    "gemini-3.7-flash",
+    "high"
+  ],
+  "judge-independent": [
+    "glm-5.3-flash",
+    "high"
+  ],
+  "judge-disagreement": [
+    "gpt-5.6-luna",
+    "high"
+  ],
+  "judge-frontier-code": [
+    "grok-4.6",
+    null
+  ],
+  "judge-frontier-general": [
+    "gpt-5.6-sol",
+    "xhigh"
+  ],
+  "verifier-planner": [
+    "glm-5.3-flash",
+    "high"
+  ],
+  "frontier-resolver": [
+    "grok-4.6",
+    null
+  ],
+  "frontier-resolver-standby": [
+    "gpt-5.6-sol",
+    "xhigh"
+  ]
+}

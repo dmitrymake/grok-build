@@ -1,0 +1,355 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "data-01",
+      "prompt": "Добавь фильтр статуса заказа в demo-shop",
+      "expect": {"intent": "implement", "role": "implement-standard"}
+    },
+    {
+      "id": "data-02",
+      "prompt": "Update the sample-api retry configuration",
+      "expect": {"intent": "implement", "role": "implement-standard"}
+    },
+    {
+      "id": "data-03",
+      "prompt": "Добавь юнит-тест для скидок в demo-shop",
+      "expect": {"intent": "implement", "role": "implement-cheap"}
+    },
+    {
+      "id": "data-04",
+      "prompt": "Summarize the sample-api status output",
+      "expect": {"intent": null, "role": null, "flag": "short informational request remains unclassified"}
+    },
+    {
+      "id": "data-05",
+      "prompt": "Migrate the demo-shop public API authentication layer",
+      "expect": {"intent": "implement", "role": "implement-hard", "flag": "high-complexity migration selects hard implementation"}
+    },
+    {
+      "id": "data-06",
+      "prompt": "Рефактор общего слоя заказов в demo-shop",
+      "expect": {"intent": "implement", "role": "implement-standard"}
+    },
+    {
+      "id": "data-07",
+      "prompt": "Fix the failing unit test for sample-api pagination",
+      "expect": {"intent": "implement", "role": "implement-cheap"}
+    },
+    {
+      "id": "data-08",
+      "prompt": "Спроектируй событийную модель каталога demo-shop",
+      "expect": {"intent": "plan", "role": "plan-hard"}
+    },
+    {
+      "id": "data-09",
+      "prompt": "Review the docs-site navigation diff",
+      "expect": {"intent": "review", "role": "review-hard"}
+    },
+    {
+      "id": "data-10",
+      "prompt": "Check whether the demo output looks correct",
+      "expect": {"intent": null, "role": null, "flag": "ambiguous check request has no routing anchor"}
+    },
+    {
+      "id": "data-11",
+      "prompt": "Исследуй структуру sample-api, только чтение",
+      "expect": {"intent": "explore", "role": "explore"}
+    },
+    {
+      "id": "data-12",
+      "prompt": "Write a test for the docs-site link checker",
+      "expect": {"intent": "implement", "role": "implement-cheap"}
+    },
+    {
+      "id": "data-13",
+      "prompt": "Explain how the sample queue works",
+      "expect": {"intent": null, "role": null}
+    },
+    {
+      "id": "data-14",
+      "prompt": "Обнови алерт задержки фонового worker в sample-api",
+      "expect": {"intent": "implement", "role": "implement-standard"}
+    },
+    {
+      "id": "data-15",
+      "prompt": "Найди причину медленного демо-ответа, просто посмотри",
+      "expect": {"intent": null, "role": null}
+    },
+    {
+      "id": "fw-16",
+      "prompt": "Прошей тестовое устройство через sysupgrade и проверь статус",
+      "expect": {"intent": "implement", "role": "implement-ops"}
+    },
+    {
+      "id": "fw-17",
+      "prompt": "Flash the generic lab device with sysupgrade",
+      "expect": {"intent": "implement", "role": "implement-ops"}
+    },
+    {
+      "id": "fw-18",
+      "prompt": "Почини watchdog на тестовом устройстве",
+      "expect": {"intent": "implement", "role": "implement-cheap"}
+    },
+    {
+      "id": "fw-19",
+      "prompt": "Run sysupgrade on the disposable lab device",
+      "expect": {"intent": "implement", "role": "implement-ops"}
+    },
+    {
+      "id": "fw-20",
+      "prompt": "Проверь тестовый firmware image на уязвимости перед запуском",
+      "expect": {"intent": "security", "role": "security", "flag": "security intent does not fall back to implementation"}
+    },
+    {
+      "id": "fw-21",
+      "prompt": "Write a threat model for the sample-api gateway",
+      "expect": {"intent": "security", "role": "security"}
+    },
+    {
+      "id": "fw-22",
+      "prompt": "Update the generic router profile without flashing firmware",
+      "expect": {"intent": "implement", "role": "implement-standard"}
+    },
+    {
+      "id": "fw-23",
+      "prompt": "Почини индикатор тестовой VPN-сети",
+      "expect": {"intent": "implement", "role": "implement-cheap"}
+    },
+    {
+      "id": "fw-24",
+      "prompt": "@review проверь изменения конфигурации тестового устройства",
+      "expect": {"intent": "review", "role": "review-hard", "flag": "at-sign override"}
+    },
+    {
+      "id": "fw-25",
+      "prompt": "Why does the lab router restart?",
+      "expect": {"intent": null, "role": null}
+    },
+    {
+      "id": "fw-26",
+      "prompt": "Pentest the generic VPN test configuration",
+      "expect": {"intent": "security", "role": "security"}
+    },
+    {
+      "id": "df-27",
+      "prompt": "Добавь роль demo-worker в конфиг и реестр ролей",
+      "expect": {"intent": "implement", "role": "implement-standard"}
+    },
+    {
+      "id": "df-28",
+      "prompt": "Fix the sample-api route hook",
+      "expect": {"intent": "implement", "role": "implement-standard"}
+    },
+    {
+      "id": "df-29",
+      "prompt": "cheap напиши регрессионный тест для demo parser",
+      "expect": {"intent": "implement", "role": "implement-cheap", "flag": "cheap modifier preserves implement intent"}
+    },
+    {
+      "id": "df-30",
+      "prompt": "--route review inspect the sample policy change",
+      "expect": {"intent": "review", "role": "review-hard", "flag": "long-form route override"}
+    },
+    {
+      "id": "df-31",
+      "prompt": "route=plan: describe the sample worker architecture",
+      "expect": {"intent": "plan", "role": "plan-hard", "flag": "route-equals override"}
+    },
+    {
+      "id": "df-32",
+      "prompt": "Отрефакторь транзакции sample-api под общий lock helper",
+      "expect": {"intent": "implement", "role": "implement-standard"}
+    },
+    {
+      "id": "df-33",
+      "prompt": "--route explore map the docs-site repository",
+      "expect": {"intent": "explore", "role": "explore", "flag": "explore override"}
+    },
+    {
+      "id": "df-34",
+      "prompt": "Найди дыры в редактировании секретов sample-api",
+      "expect": {"intent": "security", "role": "security"}
+    },
+    {
+      "id": "df-35",
+      "prompt": "quality update the demo-shop dependency pins",
+      "expect": {"intent": "implement", "role": "implement-standard", "flag": "quality modifier preserves implement intent"}
+    },
+    {
+      "id": "sec-36",
+      "prompt": "route=security: inspect the sample backup export",
+      "expect": {"intent": "security", "role": "security", "flag": "security override remains read-only and has no fallback"}
+    },
+    {
+      "id": "sec-37",
+      "prompt": "Проверь тестовый sudoers файл на privesc",
+      "expect": {"intent": "security", "role": "security"}
+    },
+    {
+      "id": "sec-38",
+      "prompt": "Assess CVE-2099-1234 in the fictional sample gateway",
+      "expect": {"intent": "security", "role": "security"}
+    },
+    {
+      "id": "sec-39",
+      "prompt": "Добавь контроль доступа к demo-shop admin panel",
+      "expect": {"intent": "security", "role": "security"}
+    },
+    {
+      "id": "game-40",
+      "prompt": "Write an ADR for the docs-site publishing flow",
+      "expect": {"intent": "plan", "role": "plan-hard"}
+    },
+    {
+      "id": "game-41",
+      "prompt": "Проревьюй патч фильтра demo-shop",
+      "expect": {"intent": "review", "role": "review-hard"}
+    },
+    {
+      "id": "game-42",
+      "prompt": "Explore the sample-api repository without changes",
+      "expect": {"intent": "explore", "role": "explore"}
+    },
+    {
+      "id": "game-43",
+      "prompt": "Add a unit test for the sample queue",
+      "expect": {"intent": "implement", "role": "implement-cheap"}
+    },
+    {
+      "id": "game-44",
+      "prompt": "Измени цвет ссылки в docs-site",
+      "expect": {"intent": "implement", "role": "implement-standard"}
+    },
+    {
+      "id": "game-45",
+      "prompt": "Refactor sample-api concurrency handling",
+      "expect": {"intent": "implement", "role": "implement-hard"}
+    },
+    {
+      "id": "game-46",
+      "prompt": "Прошей запасное тестовое устройство",
+      "expect": {"intent": "implement", "role": "implement-ops"}
+    },
+    {
+      "id": "game-47",
+      "prompt": "Check the fictional gateway for an authorization bypass",
+      "expect": {"intent": "security", "role": "security"}
+    },
+    {
+      "id": "game-48",
+      "prompt": "Summarize the sample inventory",
+      "expect": {"intent": null, "role": null}
+    },
+    {
+      "id": "game-49",
+      "prompt": "@plan спроектируй кэш sample-api",
+      "expect": {"intent": "plan", "role": "plan-hard", "flag": "at-sign plan override"}
+    },
+    {
+      "id": "ms-47",
+      "prompt": "Repo-wide migration of event names across 30 demo-shop modules",
+      "expect": {"intent": "implement", "role": "implement-hard"}
+    },
+    {
+      "id": "st5-01",
+      "prompt": "Сделай ревью последнего коммита",
+      "expect": {"intent": "review", "role": "review-hard", "flag": "RU review noun routes to review"}
+    },
+    {
+      "id": "st5-02",
+      "prompt": "Проверь изменения на ошибки и гонки",
+      "expect": {"intent": "review", "role": "review-hard", "flag": "RU review of changes beats demoted гонки stem"}
+    },
+    {
+      "id": "st5-03",
+      "prompt": "Разберись, как устроена маршрутизация в этом репозитории",
+      "expect": {"intent": "explore", "role": "explore", "flag": "RU structure walkthrough routes to explore"}
+    },
+    {
+      "id": "st5-04",
+      "prompt": "Где определяется конфигурация ролей сабагентов?",
+      "expect": {"intent": "explore", "role": "explore", "flag": "RU locate-definition question routes to explore"}
+    },
+    {
+      "id": "st5-05",
+      "prompt": "Составь план миграции на новую схему базы данных",
+      "expect": {"intent": "plan", "role": "plan-hard", "flag": "RU plan request beats demoted миграции stem"}
+    },
+    {
+      "id": "st5-06",
+      "prompt": "Переработай транзакционный слой платежей",
+      "expect": {"intent": "implement", "role": "implement-standard", "flag": "RU rework strong needle routes to implement"}
+    },
+    {
+      "id": "st5-07",
+      "prompt": "Разберись и почини гонки в планировщике",
+      "expect": {"intent": "implement", "flag": "explore phrase never beats implement phrases"}
+    },
+    {
+      "id": "st5-08",
+      "prompt": "Миграция базы на новую версию",
+      "expect": {"intent": "implement", "flag": "demoted миграц stem stays an implement phrase"}
+    },
+    {
+      "id": "st5-09",
+      "prompt": "Repo-wide migration and review the diff",
+      "expect": {"intent": "implement", "flag": "strong repo-wide keeps implement above review"}
+    },
+    {
+      "id": "st5-10",
+      "prompt": "Проверь прошивку на уязвимости",
+      "expect": {"intent": "security", "role": "security", "flag": "security beats review/implement on vulnerability needles"}
+    },
+    {
+      "id": "st5-11",
+      "prompt": "Как работает vpn, объясни",
+      "expect": {"intent": null, "role": null, "flag": "how-does-it-work question stays unclassified"}
+    },
+    {
+      "id": "st5-12",
+      "prompt": "Удали все старые таблицы в проде и пересоздай схему с нуля",
+      "expect": {"intent": "implement", "role": "implement-ops", "flag": "compound destructive verb+target selects ops"}
+    },
+    {
+      "id": "st5-13",
+      "prompt": "Снеси каталог логов на сервере",
+      "expect": {"intent": "implement", "role": "implement-ops", "flag": "compound destructive verb+target selects ops"}
+    },
+    {
+      "id": "st5-14",
+      "prompt": "Удали неиспользуемый импорт",
+      "expect": {"intent": "implement", "role": "implement-standard", "flag": "destructive verb without a target stays off the ops branch"}
+    },
+    {
+      "id": "st5-15",
+      "prompt": "Удали кэш приложения",
+      "expect": {"intent": "implement", "role": "implement-standard", "flag": "no destructive target means not implement-ops"}
+    },
+    {
+      "id": "st5-16",
+      "prompt": "rm -rf /srv/application",
+      "expect": {"intent": "implement", "role": "implement-ops", "flag": "destructive shell syntax classifies as implement and selects ops"}
+    },
+    {
+      "id": "st5-17",
+      "prompt": "Drop table users",
+      "expect": {"intent": "implement", "role": "implement-ops", "flag": "EN destructive verb+table target selects ops"}
+    },
+    {
+      "id": "st5-18",
+      "prompt": "Truncate database audit",
+      "expect": {"intent": "implement", "role": "implement-ops", "flag": "EN destructive verb+database target selects ops"}
+    },
+    {
+      "id": "st5-19",
+      "prompt": "Format disk",
+      "expect": {"intent": "implement", "role": "implement-ops", "flag": "EN destructive verb+disk target selects ops"}
+    },
+    {
+      "id": "st5-20",
+      "prompt": "Удали данные, пожалуйста",
+      "expect": {"intent": "implement", "role": "implement-ops", "flag": "edge punctuation on verb and exact data noun still selects ops"}
+    }
+  ]
+}

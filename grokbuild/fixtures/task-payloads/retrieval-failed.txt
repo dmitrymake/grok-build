@@ -1,0 +1,8 @@
+=== Task bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb ===
+Command: [subagent:explore] ...
+Status: failed
+Duration: 1s
+Exit Code: 1
+
+=== Output ===
+subagent failed

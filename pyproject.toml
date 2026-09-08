@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "grok-build"
+version = "0.1.0"
+description = "Cooperative routing and stage-gating layer for the Grok CLI"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+classifiers = ["Programming Language :: Python :: 3 :: Only", "Environment :: Console"]
+
+[project.scripts]
+grok-route = "grokbuild.cli:main"
+
+[tool.setuptools]
+packages = ["grokbuild"]
+
+[tool.setuptools.package-data]
+grokbuild = ["*.json", "README.md", "fixtures/*.json", "fixtures/task-payloads/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E402"]
+"hooks/*" = ["E402"]

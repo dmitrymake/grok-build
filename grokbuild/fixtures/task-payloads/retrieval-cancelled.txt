@@ -1,0 +1,7 @@
+=== Task cccccccc-cccc-cccc-cccc-cccccccccccc ===
+Command: [subagent:explore] ...
+Status: cancelled
+Duration: 1s
+
+=== Output ===
+subagent cancelled

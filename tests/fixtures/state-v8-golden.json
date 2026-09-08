@@ -1,0 +1,283 @@
+{
+  "version": 8,
+  "updated_at": 2000000005.0,
+  "roles": {
+    "explore": {
+      "available": true,
+      "reason": "",
+      "availability_signal": "operator",
+      "consecutive_failures": 1,
+      "consecutive_successes": 4,
+      "total_failures": 2,
+      "total_successes": 8,
+      "requested": 5,
+      "completed": 4,
+      "quota_used": 12,
+      "quota_limit": 20,
+      "circuit_open_until": 0.0,
+      "last_seen": 2000000001.0
+    },
+    "implement-standard": {
+      "available": false,
+      "reason": "quota",
+      "availability_signal": "",
+      "consecutive_failures": 3,
+      "consecutive_successes": 0,
+      "total_failures": 7,
+      "total_successes": 1,
+      "requested": 8,
+      "completed": 1,
+      "quota_used": 20,
+      "quota_limit": 20,
+      "circuit_open_until": 2000000300.0,
+      "last_seen": 2000000002.0
+    }
+  },
+  "provider_availability": {
+    "grok": {
+      "available": false,
+      "unavailable_until": 2000000300.0,
+      "reason": "maintenance",
+      "last_seen": 2000000000.75
+    },
+    "sample": {
+      "available": true,
+      "unavailable_until": 0.0,
+      "reason": "",
+      "last_seen": 2000000000.5
+    }
+  },
+  "turns": {
+    "session-main": 7,
+    "session-old": 2
+  },
+  "prompts": {
+    "session-main": "prompt-key-main",
+    "session-old": "prompt-key-old"
+  },
+  "turn_seen": {
+    "session-main": 2000000001.5,
+    "session-old": 2000000001.75
+  },
+  "executions": {
+    "decision-legacy": {
+      "decision_id": "decision-legacy",
+      "session_id": "session-old",
+      "turn_id": 2,
+      "stages": [
+        {
+          "role": "plan",
+          "required": true,
+          "reason": "legacy stage",
+          "alternatives": [],
+          "kind": "spawn",
+          "command": "",
+          "stage_id": "",
+          "members": [],
+          "slot": ""
+        }
+      ],
+      "requested": [
+        "plan"
+      ],
+      "completed": [],
+      "failed": [],
+      "verified": [],
+      "member_tasks": {},
+      "stage_tasks": {},
+      "terminal_tasks": {},
+      "verify_tasks": {},
+      "requested_at": {},
+      "repair_failures": {},
+      "not_found_streaks": {},
+      "failure_reasons": {},
+      "warnings": [],
+      "migrated_dropped": [],
+      "stop_blocks": 0,
+      "updated_at": 2000000004.0
+    },
+    "decision-saturated": {
+      "decision_id": "decision-saturated",
+      "session_id": "session-main",
+      "turn_id": 7,
+      "stages": [
+        {
+          "role": "explore",
+          "required": true,
+          "reason": "recon",
+          "alternatives": [],
+          "kind": "spawn",
+          "command": "",
+          "stage_id": "recon",
+          "members": [],
+          "slot": "recon"
+        },
+        {
+          "role": "implement-standard",
+          "required": true,
+          "reason": "implementation",
+          "alternatives": [],
+          "kind": "spawn",
+          "command": "",
+          "stage_id": "impl",
+          "members": [],
+          "slot": "impl"
+        },
+        {
+          "role": "recon",
+          "required": true,
+          "reason": "parallel recon",
+          "alternatives": [],
+          "kind": "parallel_spawn",
+          "command": "",
+          "stage_id": "recon-fanout",
+          "members": [
+            {
+              "member_id": "a",
+              "role": "explore",
+              "required": true,
+              "reason": "first"
+            },
+            {
+              "member_id": "b",
+              "role": "explore-thorough",
+              "required": true,
+              "reason": "second"
+            }
+          ],
+          "slot": "recon"
+        },
+        {
+          "role": "review",
+          "required": true,
+          "reason": "review barrier",
+          "alternatives": [],
+          "kind": "parallel_spawn",
+          "command": "",
+          "stage_id": "review-panel",
+          "members": [
+            {
+              "member_id": "one",
+              "role": "review",
+              "required": true,
+              "reason": "panel one"
+            },
+            {
+              "member_id": "two",
+              "role": "review-independent",
+              "required": true,
+              "reason": "panel two"
+            }
+          ],
+          "slot": "review"
+        },
+        {
+          "role": "verify",
+          "required": true,
+          "reason": "verify step 0",
+          "alternatives": [],
+          "kind": "verify",
+          "command": "./verify-0.sh",
+          "stage_id": "verify/0",
+          "members": [],
+          "slot": "verify"
+        },
+        {
+          "role": "verify",
+          "required": true,
+          "reason": "verify step 1",
+          "alternatives": [],
+          "kind": "verify",
+          "command": "./verify-1.sh",
+          "stage_id": "verify/1",
+          "members": [],
+          "slot": "verify"
+        },
+        {
+          "role": "verify",
+          "required": true,
+          "reason": "verify step 2",
+          "alternatives": [],
+          "kind": "verify",
+          "command": "./verify-2.sh",
+          "stage_id": "verify/2",
+          "members": [],
+          "slot": "verify"
+        }
+      ],
+      "requested": [
+        "recon-fanout/a",
+        "recon-fanout/b",
+        "review-panel/one",
+        "explore"
+      ],
+      "completed": [
+        "recon-fanout/b",
+        "review-panel/one",
+        "explore"
+      ],
+      "failed": [
+        "impl"
+      ],
+      "verified": [
+        "verify/0"
+      ],
+      "member_tasks": {
+        "recon-fanout/a": "job-recon-a"
+      },
+      "stage_tasks": {
+        "explore": "job-explore"
+      },
+      "terminal_tasks": {
+        "job-terminal": "impl"
+      },
+      "verify_tasks": {
+        "job-verify": "verify/1"
+      },
+      "requested_at": {
+        "recon-fanout/a": 1700000001.25,
+        "explore": 1700000002.5
+      },
+      "repair_failures": {
+        "impl": 2,
+        "verify/1": 1
+      },
+      "not_found_streaks": {
+        "impl": {
+          "task_id": "job-terminal",
+          "count": 1
+        }
+      },
+      "failure_reasons": {
+        "impl": "compile failure"
+      },
+      "warnings": [
+        "retry pending"
+      ],
+      "migrated_dropped": [
+        "completed:old"
+      ],
+      "stop_blocks": 3,
+      "updated_at": 2000000003.75
+    }
+  },
+  "session_circuits": {
+    "session-main": {
+      "implement-standard": {
+        "available": false,
+        "reason": "spawn failure",
+        "availability_signal": "",
+        "consecutive_failures": 3,
+        "consecutive_successes": 0,
+        "total_failures": 3,
+        "total_successes": 0,
+        "requested": 0,
+        "completed": 0,
+        "quota_used": 0,
+        "quota_limit": null,
+        "circuit_open_until": 2000000300.0,
+        "last_seen": 2000000002.25
+      }
+    }
+  }
+}

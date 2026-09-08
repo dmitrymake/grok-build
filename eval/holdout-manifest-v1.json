@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "holdout_version": "judge-holdout-v1",
+  "frozen": true,
+  "case_ids": ["hidden-001", "hidden-002", "hidden-003"],
+  "content_location": "controller-owned external storage",
+  "content_digest": "sha256:controller-supplied-at-run-time"
+}

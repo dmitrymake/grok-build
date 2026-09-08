@@ -1,0 +1,38 @@
+{
+  "hookEventName": "post_tool_use",
+  "sessionId": "11111111-1111-7111-8111-111111111111",
+  "cwd": "/home/user/project",
+  "workspaceRoot": "/home/user/project",
+  "timestamp": "2026-08-25T14:01:00+00:00",
+  "transcriptPath": "/home/user/.grok/sessions/project/session/updates.jsonl",
+  "permissionMode": "bypassPermissions",
+  "toolName": "get_command_or_subagent_output",
+  "toolUseId": "call_retrieve_verify_background",
+  "toolInput": {
+    "task_ids": [
+      "22222222-2222-7222-8222-222222222222"
+    ],
+    "timeout_ms": 10000
+  },
+  "toolResult": {
+    "type": "TaskOutput",
+    "Result": {
+      "task_id": "22222222-2222-7222-8222-222222222222",
+      "command": "./tests/grok-route-test.sh",
+      "status": "completed",
+      "exit_code": 0,
+      "started": "2026-08-25T14:00:00Z",
+      "ended": "2026-08-25T14:01:00Z",
+      "duration_secs": 60.0,
+      "output": "routing verifier passed\n",
+      "output_file": "/home/user/.grok/sessions/project/session/terminal/call_verify_background.log",
+      "truncated": false,
+      "truncation_hint": "[truncated - use read_file on output_file for full content]",
+      "raw_output_bytes": 24
+    }
+  },
+  "toolInputTruncated": false,
+  "toolResultTruncated": false,
+  "isBackgrounded": false,
+  "subagentType": "implement-hard"
+}

@@ -1,0 +1,28 @@
+__pycache__/
+*.pyc
+dist/
+build/
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Raw R1 evaluation records may contain task diffs and provider telemetry.
+/eval/runs/
+
+# Benchmark run workspaces (copies of task workspaces + agent output).
+/bench/runs/
+/bench/tb-runs/
+
+# Private release-check term lists (real L1/L2 blacklists) stay out of the tree.
+scripts/release-check.d/*.local.txt
+
+# Engagement receipts stay on disk but are never publication candidates.
+/approve.json
+/approve_owner.json
+/deposit.json
+/deposit_owner.json
+/fund_strategy.json
+/guardian_update.json
+/loss_transfer.json
+/owner_setkeyring.json
+/stop.json

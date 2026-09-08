@@ -1,0 +1,14 @@
+{
+  "schema": "r2-task-result-v1",
+  "contract_version": 1,
+  "decision_id": "d-1",
+  "stage_key": "impl",
+  "task_id": "T1",
+  "status": "success",
+  "changed_paths": ["src/app.py"],
+  "artifacts": ["src/app.py"],
+  "checks": [{"name": "verify/0", "passed": true}],
+  "criteria": [],
+  "unresolved": ["the migration script is untested"],
+  "observed_at": "2026-08-31T00:00:00Z"
+}

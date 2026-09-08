@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "id": "fictional-dashboard-002",
+  "version": 1,
+  "prompt": "Implement pagination for the fictional observatory dashboard API. Preserve the existing response envelope, validate page bounds, and add focused tests for empty and full pages.",
+  "task_class": "implement",
+  "complexity": "medium",
+  "path_scope": {"writable": ["dashboard/api.py", "dashboard/tests/test_api.py"], "allowed": ["dashboard/api.py", "dashboard/tests/test_api.py"]},
+  "rubric": {"ref": "eval/verifiers/fictional-dashboard-002/rubric.md", "version": 1},
+  "hidden_verifier": {"ref": "controller-only", "version": 1},
+  "acceptance": [{"kind": "pytest", "spec": "dashboard/tests/test_api.py::test_pagination"}, {"kind": "file_contains", "spec": "dashboard/api.py:page_size"}]
+}

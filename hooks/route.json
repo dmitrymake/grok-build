@@ -1,0 +1,62 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./route.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "request_visual_analysis|kill_command_or_subagent|search_replace|write|Write|edit|Edit|multiedit|MultiEdit|strreplace|spawn_subagent|Task|run_terminal_command|workflow|image_edit|image_gen|image_to_video|reference_to_video|ImageEdit|ImageGen|ImageToVideo|ReferenceToVideo|grep|list_dir|search|web_search|[A-Za-z0-9_-]+__[A-Za-z0-9_-]+|scheduler_create|scheduler_delete|monitor",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./route.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "search_replace|write|Write|edit|Edit|multiedit|MultiEdit|strreplace|spawn_subagent|Task|run_terminal_command|workflow|image_edit|image_gen|image_to_video|reference_to_video|ImageEdit|ImageGen|ImageToVideo|ReferenceToVideo|get_command_or_subagent_output|[A-Za-z0-9_-]+__[A-Za-z0-9_-]+|scheduler_create|scheduler_delete|monitor",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./route.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "spawn_subagent|Task|get_command_or_subagent_output|monitor|scheduler_create|run_terminal_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./route.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./route.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# CLI wrapper for the Grok Build router. Resolves an installed symlink back to
+# the checkout and preserves the caller's working directory for relative paths.
+
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+# Resolve a symlink (installed as ~/.local/bin/grok-route) back to the repo.
+if [ -L "$0" ]; then
+  TARGET="$(readlink "$0")"
+  case "$TARGET" in
+    /*) SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$TARGET")" && pwd)" ;;
+    *) SCRIPT_DIR="$(CDPATH= cd -- "$SCRIPT_DIR/$(dirname -- "$TARGET")" && pwd)" ;;
+  esac
+fi
+REPO_DIR="${REPO_DIR:-$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)}"
+
+exec env PYTHONPATH="$REPO_DIR${PYTHONPATH:+:$PYTHONPATH}" python3 -m grokbuild.cli "$@"

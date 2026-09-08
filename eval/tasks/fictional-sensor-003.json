@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "id": "fictional-sensor-003",
+  "version": 1,
+  "prompt": "Проведите высокосложную миграцию вымышленного протокола датчиков на потокобезопасный формат. Обновите обработку конкурентных сообщений и подготовьте тесты миграции.",
+  "task_class": "implement",
+  "complexity": "high",
+  "path_scope": {"writable": ["sensor/protocol.py", "sensor/migrate.py", "sensor/tests/test_migration.py"], "allowed": ["sensor/protocol.py", "sensor/migrate.py", "sensor/tests/test_migration.py"]},
+  "rubric": {"ref": "eval/verifiers/fictional-sensor-003/rubric.md", "version": 1},
+  "hidden_verifier": {"ref": "controller-only", "version": 1},
+  "acceptance": [{"kind": "pytest", "spec": "sensor/tests/test_migration.py::test_concurrent_messages"}, {"kind": "file_contains", "spec": "sensor/protocol.py:thread_safe"}]
+}

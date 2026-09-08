@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "role_contracts": {
+    "visual-intake": {
+      "en": "read-only schema-v1 image preflight; explicit vision capability required"
+    },
+    "visual-intake-deep": {
+      "en": "read-only high-detail fallback and targeted reinspection"
+    },
+    "explore": {
+      "en": "scoped read-only reconnaissance"
+    },
+    "explore-thorough": {
+      "en": "architecture-wide read-only reconnaissance"
+    },
+    "explore-risk": {
+      "en": "profile-scoped read-only risk reconnaissance with bounded verifiable flags"
+    },
+    "implement": {
+      "en": "default implementation alias; exact pair with implement-standard"
+    },
+    "implement-cheap": {
+      "en": "low-scope implementation; effort-distinct from standard"
+    },
+    "implement-standard": {
+      "en": "default implementation"
+    },
+    "implement-hard": {
+      "en": "hard implementation"
+    },
+    "implement-ops": {
+      "en": "firmware, operations, destructive, or physical implementation"
+    },
+    "implement-overflow": {
+      "en": "cross-provider overflow after primary tiers fail"
+    },
+    "implement-cheap-fallback": {
+      "en": "strict last resort: low-risk, testable work with a known verifier"
+    },
+    "plan": {
+      "en": "read-only planning alias; exact pair with plan-hard"
+    },
+    "plan-hard": {
+      "en": "hard read-only planning"
+    },
+    "review": {
+      "en": "legacy alias; prefer review-hard"
+    },
+    "review-hard": {
+      "en": "internal read-only review"
+    },
+    "review-independent": {
+      "en": "independent read-only review with an explicit availability signal"
+    },
+    "expert-rescue": {
+      "en": "independent read-only diagnosis; never implements"
+    },
+    "consilium-analyst": {
+      "en": "fresh-eyes read-only failure analysis from telemetry and state"
+    },
+    "consilium-challenger": {
+      "en": "adversarial read-only cross-examination of repair attempts"
+    },
+    "consilium-arbiter": {
+      "en": "read-only synthesis of a repair verdict and concrete plan"
+    },
+    "security": {
+      "en": "read-only security analysis"
+    },
+    "security-verify": {
+      "en": "independent read-only security verification with an explicit availability signal"
+    },
+    "general-purpose": {
+      "en": "infrastructure-child compatibility pin"
+    },
+    "researcher": {
+      "en": "deep multi-source research and synthesis lead"
+    },
+    "researcher-analyst": {
+      "en": "alternative-perspective research analysis"
+    },
+    "researcher-challenger": {
+      "en": "adversarial verification of research findings"
+    },
+    "planner-a": {
+      "en": "independent read-only decomposition (primary provider)"
+    },
+    "planner-b": {
+      "en": "independent read-only decomposition (redundant endpoint, same family)"
+    },
+    "planner-c": {
+      "en": "independent read-only decomposition (different model family)"
+    },
+    "plan-comparator": {
+      "en": "agreement signal across competing decompositions; never selects a plan"
+    },
+    "criterion-judge": {
+      "en": "calibrated forced-choice criterion token from provider logits; unavailable logits abstain"
+    },
+    "judge-primary": {
+      "en": "compares candidate artifacts pairwise on evidence"
+    },
+    "judge-independent": {
+      "en": "second independent comparison of the same pair in reversed order, from a different provider"
+    },
+    "judge-disagreement": {
+      "en": "adjudicates only when the two cheap judges disagree after a discriminating test"
+    },
+    "judge-frontier-code": {
+      "en": "frontier adjudication for code artifacts, bought only after cheaper comparison fails to resolve"
+    },
+    "judge-frontier-general": {
+      "en": "frontier adjudication for non-code artifacts, bought only after cheaper comparison fails to resolve"
+    },
+    "verifier-planner": {
+      "en": "states what evidence would settle an undecided comparison"
+    },
+    "frontier-resolver": {
+      "en": "rare meta-planning escalation for genuinely ambiguous tasks"
+    },
+    "frontier-resolver-standby": {
+      "en": "standby meta-planning escalation when the primary frontier binding is unavailable"
+    },
+    "implement-strong": {
+      "en": "strong middle-tier implementation within the declared scope"
+    },
+    "planner-strong": {
+      "en": "optional strong read-only planner seat for the expanded market"
+    },
+    "judge-challenger-agentic": {
+      "en": "opt-in read-only agentic challenger via Together AI; composes only under the judge-challengers profile"
+    },
+    "judge-challenger-structural": {
+      "en": "opt-in read-only structural challenger via Together AI; composes only under the judge-challengers profile"
+    }
+  },
+  "binding_rules": {
+    "provider_pool_a": {
+      "roles": [
+        "implement-ops",
+        "security",
+        "consilium-analyst",
+        "researcher-analyst",
+        "planner-c"
+      ],
+      "binding": "glm-5.3",
+      "models": [
+        "glm-5.3",
+        "glm-5.3-flash"
+      ],
+      "raw_model": "glm-5.3",
+      "provider": "zai",
+      "credential_env_pattern": "ZAI_API_KEY",
+      "declared_context": 1000000
+    },
+    "grok_session_auth": {
+      "model": "grok-4.6",
+      "roles": [
+        "review-independent",
+        "expert-rescue",
+        "security-verify",
+        "researcher-challenger",
+        "judge-frontier-code",
+        "frontier-resolver"
+      ],
+      "provider": "xai",
+      "auth": "session",
+      "login_command": "grok login",
+      "model_credential_binding": false
+    },
+    "model_proxy": {
+      "models": [
+        "gpt-5.6-luna",
+        "gpt-5.6-terra",
+        "gpt-5.6-sol",
+        "gpt-6-astra"
+      ],
+      "provider": "codex",
+      "auth": "configured proxy endpoint and API key"
+    }
+  },
+  "notes": {
+    "web_research": {
+      "model": "grok-4.6"
+    },
+    "batch_pool": {
+      "models": [
+        "glm-5.3-flash",
+        "deepseek-v4-flash"
+      ],
+      "workloads": [
+        "mass text",
+        "extraction",
+        "classification"
+      ],
+      "interactive": false
+    },
+    "conductor_policy": {
+      "zero_write": true,
+      "maps_repository": false,
+      "implements": false,
+      "implementation_child_capability_mode": "all",
+      "advisory_model": "gemini-3.7-flash",
+      "advisory_below_confidence": 0.3
+    },
+    "external_task_applicability": {
+      "en": "Verification assumes the artifact is reachable. For external/sandbox tasks (docker-exec, remote wrappers), a read-only reviewer may be unable to inspect the artifact directly; in that case the reviewer's BLOCKED 'cannot verify' report is treated as review_inconclusive, not a failed review: the stage is discharged and the harness accepts a static conclusion based on the typed evidence already gathered. A deterministic task verifier, when the task defines one, is executed by a writable child — never by the zero-write conductor."
+    },
+    "autonomy": {
+      "values": [
+        "guided",
+        "standard",
+        "broad"
+      ],
+      "brief_contract": {
+        "guided": "complete, precise briefs with exact files, steps, and verifier",
+        "standard": "goals, constraints, and acceptance with bounded local discretion",
+        "broad": "goals and constraints; may self-direct read-only investigation within scope"
+      },
+      "overflow_policy": "At approximately 80% of a model context window, resume or respawn on a larger-context model first with gpt-6-astra (1.05M), then glm-5.3, while preserving the role read-only or writable class."
+    }
+  }
+}

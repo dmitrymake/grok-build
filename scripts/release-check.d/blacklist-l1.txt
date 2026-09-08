@@ -1,0 +1,7 @@
+# L1 personal-identifier blacklist: one term per line, matched case-insensitively
+# on word boundaries by scripts/release-check.sh (Gate 1 and the history Gate 6)
+# and by tests/test_eval_composition.py.
+#
+# The real terms are private by definition and never live in the tree: put
+# them in blacklist-l1.local.txt next to this file (untracked, .gitignore'd).
+# Both files are read; this tracked file carries only the format.

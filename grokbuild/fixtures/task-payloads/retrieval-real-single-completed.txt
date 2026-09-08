@@ -1,0 +1,50 @@
+=== Task 01a038ed-8063-77a2-bb60-e700d5b73940 ===
+Command: [subagent:explore] Extract refactor rules and backlog
+Status: completed
+Duration: 209.74s
+Exit Code: 0
+
+=== Output ===
+## RULES
+
+Source: [`docs/tasks/maintainability-cleanup.md`](/home/user/project/docs/tasks/maintainability-cleanup.md), [`AGENTS.md`](/home/user/project/AGENTS.md), and [`CONTRIBUTING.md`](/home/user/project/CONTRIBUTING.md).
+
+- Limit each cleanup wave to one fictional service; avoid broad renames, schema changes, or production access.
+- Complexity metrics rank candidates but do not justify changes alone.
+- Preserve outputs, exceptions, evaluation order, side effects, and runtime contracts.
+- Required evidence includes a consumer scan, focused parity tests, the offline regression suite, lint, and independent review.
+- sample commands are `uv sync --all-groups`, `uv run pytest`, and `uv run ruff check`.
+
+## CURRENT METRICS TABLE
+
+The sample-service baseline lists several large modules that remain candidates for bounded cleanup.
+
+| File | Baseline | Current | Split? |
+|---|---:|---:|---|
+| `src/catalog/tools.py` | 1,200 | 1,201 | No |
+| `src/catalog/repo.py` | 1,050 | 1,051 | No |
+| `src/orders/tools.py` | 980 | 981 | No |
+| `src/notifications/render.py` | 810 | 811 | No |
+
+## SPLIT PRECEDENT PATTERN
+
+The generic `accounts` service is decomposed into repository, tools, formatting, and validation modules. Public imports remain stable through explicit compatibility exports.
+
+## UNUSED_COMPONENT VERDICT
+
+The `legacy_reports` package is absent from configured service discovery and has no source consumers. Removing it should not affect runtime behavior, but tracked status requires separate verification.
+
+## ORDERED BACKLOG
+
+1. Pure local parser and formatter cleanup — low risk.
+2. Catalog tool split with compatibility preservation — medium-low risk.
+3. Orders repository split — medium risk and requires database-gated evidence.
+4. Notification rendering split — high risk due to shared output contracts.
+
+<subagent_meta>id=01a038ed-8063-77a2-bb60-e700d5b73940, type=explore, tool_calls=54, turns=1, duration_ms=209735</subagent_meta>
+
+<subagent_result>
+subagent_id: 01a038ed-8063-77a2-bb60-e700d5b73940
+subagent_type: explore
+To continue this subagent's conversation, use resume_from="01a038ed-8063-77a2-bb60-e700d5b73940".
+</subagent_result>

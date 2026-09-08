@@ -1,0 +1,6 @@
+{
+  "schema": "r2-task-result-v0",
+  "decision_id": "d-1",
+  "stage_key": "impl",
+  "status": "success"
+}

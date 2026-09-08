@@ -1,0 +1,9 @@
+=== Multi-wait (wait_all) ===
+--- Task completed-sibling [completed] ---
+Exit Code: 0
+completed output
+--- Task missing-a [not_found] ---
+Task missing-a not found.
+--- Task missing-b [not_found] ---
+Task missing-b not found.
+No background tasks or subagents exist in this session.

@@ -1,0 +1,6 @@
+Subagent started in background.
+subagent_id: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+type: explore
+description: recon/0
+
+When you need its result, use get_command_or_subagent_output with task_ids=["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"] with a positive timeout_ms.

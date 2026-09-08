@@ -1,0 +1,20 @@
+{
+  "agent_name": null,
+  "chat_format_version": null,
+  "created_at": null,
+  "current_model_id": null,
+  "generated_title": null,
+  "git_root_dir": null,
+  "grok_home": null,
+  "head_branch": null,
+  "head_commit": null,
+  "info": {},
+  "last_active_at": null,
+  "next_trace_turn": null,
+  "num_chat_messages": null,
+  "num_messages": null,
+  "sandbox_profile": null,
+  "session_kind": "subagent",
+  "session_summary": null,
+  "updated_at": null
+}

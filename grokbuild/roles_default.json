@@ -1,0 +1,325 @@
+{
+  "general-purpose": {
+    "model": null,
+    "capability_mode": "all",
+    "description": "Full-capability agent; inherits the parent model."
+  },
+  "explore": {
+    "model": "gpt-5.6-luna",
+    "reasoning_effort": "high",
+    "capability_mode": "read-only",
+    "description": "Scoped reconnaissance agent; reads and greps, never edits.",
+    "autonomy": "standard"
+  },
+  "explore-thorough": {
+    "model": "gpt-5.6-luna",
+    "reasoning_effort": "max",
+    "capability_mode": "read-only",
+    "description": "Architecture-wide reconnaissance agent; never edits.",
+    "autonomy": "standard"
+  },
+  "explore-risk": {
+    "model": "minimax-m3",
+    "capability_mode": "read-only",
+    "description": "Bounded risk-recon advisor; never edits.",
+    "reasoning_effort": "high",
+    "autonomy": "standard"
+  },
+  "plan": {
+    "model": "gpt-6-astra",
+    "reasoning_effort": "max",
+    "capability_mode": "read-only",
+    "description": "Planning agent; produces a structured plan, never edits.",
+    "autonomy": "broad"
+  },
+  "plan-hard": {
+    "model": "gpt-6-astra",
+    "reasoning_effort": "max",
+    "capability_mode": "read-only",
+    "description": "Hard read-only planning.",
+    "autonomy": "broad"
+  },
+  "implement": {
+    "model": "gpt-5.6-luna",
+    "reasoning_effort": "max",
+    "capability_mode": "all",
+    "description": "Standard implementation alias.",
+    "autonomy": "guided"
+  },
+  "implement-cheap": {
+    "model": "gpt-5.6-luna",
+    "reasoning_effort": "high",
+    "capability_mode": "all",
+    "description": "Low-scope implementation.",
+    "autonomy": "guided"
+  },
+  "implement-standard": {
+    "model": "gpt-5.6-luna",
+    "reasoning_effort": "max",
+    "capability_mode": "all",
+    "description": "Standard implementation.",
+    "autonomy": "guided"
+  },
+  "implement-hard": {
+    "model": "gpt-6-astra",
+    "reasoning_effort": "max",
+    "capability_mode": "all",
+    "description": "Hard implementation.",
+    "autonomy": "broad"
+  },
+  "implement-ops": {
+    "model": "glm-5.3",
+    "reasoning_effort": "high",
+    "capability_mode": "all",
+    "description": "Operations implementation.",
+    "autonomy": "standard"
+  },
+  "implement-overflow": {
+    "model": "deepseek-v4-pro",
+    "capability_mode": "all",
+    "description": "Cross-provider overflow implementation.",
+    "tier": "overflow",
+    "reasoning_effort": "high",
+    "autonomy": "standard"
+  },
+  "implement-cheap-fallback": {
+    "model": "deepseek-v4-flash",
+    "capability_mode": "all",
+    "description": "Last-resort writable fallback.",
+    "reasoning_effort": "high",
+    "autonomy": "guided"
+  },
+  "review": {
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "xhigh",
+    "capability_mode": "read-only",
+    "description": "Internal review alias.",
+    "autonomy": "standard"
+  },
+  "review-hard": {
+    "model": "glm-5.3",
+    "reasoning_effort": "max",
+    "capability_mode": "read-only",
+    "description": "Internal review.",
+    "autonomy": "standard"
+  },
+  "review-independent": {
+    "model": "grok-4.6",
+    "capability_mode": "read-only",
+    "description": "Independent review.",
+    "reasoning_effort": null,
+    "autonomy": "standard"
+  },
+  "expert-rescue": {
+    "model": "deepseek-v4-pro",
+    "capability_mode": "read-only",
+    "description": "Independent diagnosis.",
+    "reasoning_effort": "high",
+    "autonomy": "standard"
+  },
+  "consilium-analyst": {
+    "model": "glm-5.3",
+    "reasoning_effort": "max",
+    "capability_mode": "read-only",
+    "description": "Fresh-eyes failure analysis.",
+    "autonomy": "broad"
+  },
+  "consilium-challenger": {
+    "model": "deepseek-v4-pro",
+    "capability_mode": "read-only",
+    "description": "Adversarial repair cross-examination.",
+    "reasoning_effort": "high",
+    "autonomy": "standard"
+  },
+  "consilium-arbiter": {
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "xhigh",
+    "capability_mode": "read-only",
+    "description": "Repair verdict and plan synthesis.",
+    "autonomy": "standard"
+  },
+  "security": {
+    "model": "glm-5.3",
+    "reasoning_effort": "max",
+    "capability_mode": "read-only",
+    "description": "Security analysis.",
+    "autonomy": "standard"
+  },
+  "security-verify": {
+    "model": "grok-4.6",
+    "capability_mode": "read-only",
+    "description": "Independent security verification with explicit OAuth availability verification.",
+    "reasoning_effort": null,
+    "autonomy": "standard"
+  },
+  "visual-intake": {
+    "model": "minimax-m3",
+    "capability_mode": "read-only",
+    "description": "Structured visual intake.",
+    "reasoning_effort": null,
+    "autonomy": "standard"
+  },
+  "visual-intake-deep": {
+    "model": "gpt-5.6-terra",
+    "capability_mode": "read-only",
+    "description": "High-detail structured visual intake.",
+    "reasoning_effort": null,
+    "autonomy": "standard"
+  },
+  "researcher": {
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "max",
+    "capability_mode": "read-only",
+    "description": "Deep multi-source research and synthesis lead.",
+    "autonomy": "broad"
+  },
+  "researcher-analyst": {
+    "model": "glm-5.3",
+    "reasoning_effort": "max",
+    "capability_mode": "read-only",
+    "description": "Alternative-perspective research analysis.",
+    "autonomy": "broad"
+  },
+  "researcher-challenger": {
+    "model": "grok-4.6",
+    "capability_mode": "read-only",
+    "description": "Adversarial verification of research findings.",
+    "reasoning_effort": null,
+    "autonomy": "standard"
+  },
+  "planner-a": {
+    "model": "deepseek-v4-pro",
+    "capability_mode": "read-only",
+    "description": "Independent read-only task decomposition (primary provider).",
+    "tier": "cheap",
+    "reasoning_effort": "high",
+    "autonomy": "standard"
+  },
+  "planner-b": {
+    "model": "glm-5.3",
+    "capability_mode": "read-only",
+    "description": "Independent read-only task decomposition (redundant provider).",
+    "tier": "cheap",
+    "reasoning_effort": "high",
+    "autonomy": "broad"
+  },
+  "planner-c": {
+    "model": "gpt-5.6-luna",
+    "capability_mode": "read-only",
+    "description": "Independent read-only task decomposition (different model family).",
+    "tier": "cheap",
+    "reasoning_effort": "high",
+    "autonomy": "standard"
+  },
+  "plan-comparator": {
+    "model": "gemini-3.7-flash",
+    "capability_mode": "read-only",
+    "description": "Reads competing decompositions and reports agreement; produces a signal, never a selection.",
+    "tier": "cheap",
+    "reasoning_effort": "high",
+    "autonomy": "standard"
+  },
+  "criterion-judge": {
+    "model": "glm-5.3-flash",
+    "reasoning_effort": "high",
+    "capability_mode": "read-only",
+    "description": "Evaluates one contract criterion against structured evidence and marks only disputed criteria for escalation.",
+    "tier": "cheap",
+    "autonomy": "standard"
+  },
+  "judge-primary": {
+    "model": "gemini-3.7-flash",
+    "capability_mode": "read-only",
+    "description": "Compares candidate artifacts pairwise on evidence. Sees no model, provider or author identity.",
+    "tier": "cheap",
+    "reasoning_effort": "high",
+    "autonomy": "standard"
+  },
+  "judge-independent": {
+    "model": "glm-5.3-flash",
+    "capability_mode": "read-only",
+    "description": "Second independent comparison of the same pair in reversed order, from a different provider.",
+    "tier": "cheap",
+    "reasoning_effort": "high",
+    "autonomy": "standard"
+  },
+  "judge-disagreement": {
+    "model": "gpt-5.6-luna",
+    "capability_mode": "read-only",
+    "description": "Adjudicates only when the two cheap judges disagree after a discriminating test.",
+    "tier": "cheap",
+    "reasoning_effort": "high",
+    "autonomy": "standard"
+  },
+  "judge-frontier-code": {
+    "model": "grok-4.6",
+    "capability_mode": "read-only",
+    "description": "Frontier adjudication for code artifacts, bought only after cheaper comparison fails to resolve.",
+    "tier": "cheap",
+    "reasoning_effort": null,
+    "autonomy": "standard"
+  },
+  "judge-frontier-general": {
+    "model": "gpt-5.6-sol",
+    "capability_mode": "read-only",
+    "description": "Frontier adjudication for non-code artifacts, bought only after cheaper comparison fails to resolve.",
+    "tier": "cheap",
+    "reasoning_effort": "xhigh",
+    "autonomy": "standard"
+  },
+  "verifier-planner": {
+    "model": "glm-5.3-flash",
+    "capability_mode": "read-only",
+    "description": "States what evidence would settle an undecided comparison. Requests the experiment; never runs it.",
+    "tier": "cheap",
+    "reasoning_effort": "high",
+    "autonomy": "standard"
+  },
+  "frontier-resolver": {
+    "model": "grok-4.6",
+    "capability_mode": "read-only",
+    "description": "Rare meta-planner: frames an ambiguous task, decomposes it and names the invariants. Never executes the work.",
+    "tier": "spare",
+    "fallback": [
+      "frontier-resolver-standby"
+    ],
+    "reasoning_effort": null,
+    "autonomy": "standard"
+  },
+  "frontier-resolver-standby": {
+    "model": "gpt-5.6-sol",
+    "capability_mode": "read-only",
+    "description": "Standby binding for the frontier resolver when its primary is unavailable. Same meta-planning duty.",
+    "tier": "spare",
+    "reasoning_effort": "xhigh",
+    "autonomy": "standard"
+  },
+  "implement-strong": {
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "max",
+    "capability_mode": "all",
+    "autonomy": "standard",
+    "description": "Strong implementation for medium-complexity work."
+  },
+  "planner-strong": {
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "max",
+    "capability_mode": "read-only",
+    "autonomy": "standard",
+    "description": "Optional strong read-only planner seat for the expanded planner market."
+  },
+  "judge-challenger-agentic": {
+    "model": "gpt-oss-120b",
+    "reasoning_effort": "low",
+    "capability_mode": "read-only",
+    "description": "Opt-in agentic challenger for GPT-OSS-120B via Together AI.",
+    "autonomy": "standard"
+  },
+  "judge-challenger-structural": {
+    "model": "gpt-oss-20b",
+    "reasoning_effort": "low",
+    "capability_mode": "read-only",
+    "description": "Opt-in structural challenger for GPT-OSS-20B via Together AI.",
+    "autonomy": "standard"
+  }
+}

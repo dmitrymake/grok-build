@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "id": "plausible-deterministic-fail",
+  "battery_version": "judge-canaries-v1",
+  "frozen": true,
+  "kind": "non_overridable_gate",
+  "expected": "REJECT",
+  "fixture": {"semantic_surface": "plausible", "deterministic_status": "FAIL"}
+}

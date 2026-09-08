@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "default_profile": "default",
+  "profiles": {
+    "default": {
+      "mode": "dynamic",
+      "strong_weight": 3.0,
+      "phrase_weight": 1.0,
+      "topic_weight": 1.0,
+      "allow_override": true,
+      "require_strong_for_gate": true,
+      "gate_phrase_intents": [
+        "implement"
+      ],
+      "priority": [],
+      "min_score": 0.0,
+      "circuit_failure_threshold": 3,
+      "circuit_cooldown_seconds": 300.0,
+      "consilium_after_failures": 3,
+      "barrier_stall_seconds": 1800.0,
+      "recon_barrier_width": 3,
+      "research_barrier_width": 3,
+      "review_barrier_width": 1,
+      "stop_block_limit": 3,
+      "debt_window_seconds": 86400.0
+    },
+    "advisor": {
+      "recon_advisor_role": "explore-risk"
+    },
+    "observe": {
+      "mode": "shadow"
+    },
+    "enforce": {
+      "mode": "dynamic"
+    },
+    "static": {
+      "mode": "static"
+    },
+    "evidence": {
+      "evidence_policy": "strict"
+    },
+    "planner-market": {
+      "planner_market": true,
+      "planner_market_width": 4
+    },
+    "artifact-judge": {
+      "artifact_judge": true,
+      "judge_extra_reads_max": 3,
+      "judge_abstain_margin": 0.2,
+      "judge_canaries": false
+    },
+    "frontier": {
+      "frontier_escalation": true
+    },
+    "confirmation": {
+      "confirmation_batch": true
+    },
+    "judge-challengers": {
+      "artifact_judge": true,
+      "judge_challengers": true,
+      "judge_canaries": true,
+      "judge_extra_reads_max": 3,
+      "judge_abstain_margin": 0.2
+    }
+  }
+}

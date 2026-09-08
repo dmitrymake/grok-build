@@ -1,0 +1,38 @@
+{
+  "hookEventName": "post_tool_use",
+  "sessionId": "01a0391e-3f70-7060-855d-f2d7e90e2407",
+  "cwd": "/home/user/project",
+  "workspaceRoot": "/home/user/project",
+  "timestamp": "2026-08-25T13:33:55.419645024+00:00",
+  "transcriptPath": "/home/user/project/.sessions/01a0391e-3f70-7060-855d-f2d7e90e2407/updates.jsonl",
+  "permissionMode": "bypassPermissions",
+  "toolName": "get_command_or_subagent_output",
+  "toolUseId": "call_DwXAElbdIs5BeuAf3fCd638y",
+  "toolInput": {
+    "task_ids": [
+      "01a03920-7fe6-7222-8728-5463dededcbc"
+    ],
+    "timeout_ms": 10000
+  },
+  "toolResult": {
+    "type": "TaskOutput",
+    "Result": {
+      "task_id": "01a03920-7fe6-7222-8728-5463dededcbc",
+      "command": "mkdir -p ~/.local/state/grok-route && : > ~/.local/state/grok-route/payload-debug.enabled && sleep 3; echo payload-probe-ok",
+      "status": "completed",
+      "exit_code": 0,
+      "started": "2026-08-25T13:33:46Z",
+      "ended": "2026-08-25T13:33:55Z",
+      "duration_secs": 9.072883194,
+      "output": "payload-probe-ok\n",
+      "output_file": "/home/user/project/.sessions/01a0391e-3f70-7060-855d-f2d7e90e2407/terminal/call_D2uq8NxuOSexDmfdQsesT9eY.log",
+      "truncated": false,
+      "truncation_hint": "[truncated - use read_file on output_file for full content]",
+      "raw_output_bytes": 17
+    }
+  },
+  "toolInputTruncated": false,
+  "toolResultTruncated": false,
+  "isBackgrounded": false,
+  "subagentType": "implement-hard"
+}

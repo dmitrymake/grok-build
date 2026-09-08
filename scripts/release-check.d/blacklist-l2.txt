@@ -1,0 +1,6 @@
+# L2 work-technology blacklist: one term per line, matched case-insensitively on
+# word boundaries by scripts/release-check.sh (Gate 1) and by
+# tests/test_eval_composition.py. Deliberate exceptions go to l2-allowlist.txt.
+#
+# The real terms live in blacklist-l2.local.txt next to this file (untracked,
+# .gitignore'd). Both files are read; this tracked file carries only the format.
